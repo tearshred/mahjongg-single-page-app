@@ -33,17 +33,24 @@ const Board = () => {
   //   // We don’t need the setter function here yet, so only 'tiles' is used
   //   const [tiles] = useState<TileType[]>(createTiles());
 
-  const [clickedTile, setClickedTile] = useState("No tile clicked yet");
+  const [selectedTile, setSelectedTile] = useState("No tile selected yet");
 
-  const handleTileClick = () => {
-    setClickedTile("Tile clicked");
-    console.log("Tile Clicked")
+  const handleTileClick = (
+    e: React.MouseEvent<HTMLElement | SVGSVGElement>
+  ) => {
+    e.stopPropagation(); //Stops the parent div click
+    setSelectedTile("Tile selected");
+    console.log(selectedTile);
   };
 
   return (
-    <div>
-      <h1>{clickedTile}</h1>
+    <div className="w-screen h-screen flex justify-center items-center" onClick={() => setSelectedTile("Tile deselected")}>
+      <h1>{selectedTile}</h1>
       <Tile onClick={handleTileClick} />
+
+      <div className="bg-red-500 w-32 h-32">
+  Test Box
+</div>
     </div>
   );
 };
