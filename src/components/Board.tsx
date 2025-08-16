@@ -1,56 +1,50 @@
-import { useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Tile from "./Tile";
-
-type TileType = {
-  id: string;
-  number: number;
-};
+import { useMahjonggTileData } from "../hooks/useMahjonggTileData";
 
 const Board = () => {
-  //   const createTiles = (): TileType[] => {
-  //     // Create an array of 5 unique tile objects with IDs and numbers
-  //     // Array.from({ length: 5 }) creates an array with 5 undefined elements
-  //     const baseTiles = Array.from({ length: 5 }, (_, i) => ({
-  //       id: `tile_${i + 1}_a`, // 'tile_1_a', 'tile_2_a', etc.
-  //       number: i + 1, // tile number 1 through 5
-  //     }));
-  //     // Create duplicates of the base tiles
-  //     // We map over baseTiles and create a new tile object for each one
-  //     // The duplicate tile has an id with '_a' replaced by '_b' to keep IDs unique
-  //     // The number stays the same because duplicates have the same value
-  //     const duplicates = baseTiles.map((t) => ({
-  //       id: t.id.replace("_a", "_b"), // e.g. 'tile_1_b'
-  //       number: t.number,
-  //     }));
-  //     // Return a new array that combines baseTiles and duplicates using spread syntax
-  //     // This gives a total of 10 tiles: 5 unique + 5 duplicates
-  //     return [...baseTiles, ...duplicates];
-  //   };
+  const tiles = useMahjonggTileData();
 
-  //   // React state to hold the tiles array
-  //   // useState<Tile[]> initializes state with the array returned by createTiles()
-  //   // We destructure to get 'tiles' as the current state value
-  //   // We don’t need the setter function here yet, so only 'tiles' is used
-  //   const [tiles] = useState<TileType[]>(createTiles());
+  // useRef stores a value that stays the same across rerenders, so we can track if the code has already run.
+  const hasRun = useRef(false);
 
   const [selectedTile, setSelectedTile] = useState("No tile selected yet");
+  const [generatedTile, setGeneratedTile] = useState("Name: ");
+
+  useEffect(() => {
+    // !hasRun.current "flips" the current boolean value in order to detect that it mounted the component already
+    // reduces unnecessary re-renders
+    if (!hasRun.current && tiles.length > 0) {
+      const randomIndex = Math.floor(Math.random() * tiles.length);
+      console.log("Name:", tiles[randomIndex].name);
+      setGeneratedTile(tiles[randomIndex].name);
+      hasRun.current = true; // Ensuring it does mark the component as mounted already
+    }
+  }, [tiles]);
 
   const handleTileClick = (
     e: React.MouseEvent<HTMLElement | SVGSVGElement>
   ) => {
     e.stopPropagation(); //Stops the parent div click
-    setSelectedTile("Tile selected");
+    setSelectedTile(generatedTile + " selected");
     console.log(selectedTile);
   };
 
   return (
-    <div className="w-screen h-screen flex justify-center items-center" onClick={() => setSelectedTile("Tile deselected")}>
-      <h1>{selectedTile}</h1>
-      <Tile onClick={handleTileClick} />
-
-      <div className="bg-red-500 w-32 h-32">
-  Test Box
-</div>
+    <div
+      id="main-board"
+      className="w-screen h-screen "
+      onClick={() => setSelectedTile("Tile deselected")}
+    >
+      <div className="w-screen flex justify-center items-center">
+        <h1>{selectedTile}</h1>
+      </div>
+      <div className="w-screen h-screen flex justify-center items-center">
+        <Tile 
+          generatedTile={generatedTile}
+          onClick={handleTileClick} 
+        />
+      </div>
     </div>
   );
 };

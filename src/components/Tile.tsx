@@ -1,13 +1,13 @@
 import TileBase from "../assets/tiles/Front.svg?react";
 
-// Definint the props that the Tile component will accept from its parent
+// Defining the props that the Tile component will accept from its parent
 type TileProps = {
   //   value: string;
-  selectedTile?: string;
+  generatedTile?: string;
   onClick?: (e: React.MouseEvent<HTMLElement | SVGSVGElement>) => void;
 };
 
-const Tile = ({ onClick }: TileProps) => {
+const Tile = ({ onClick, generatedTile }: TileProps) => {
   // Creating a wrapper function that stops the propagation first
   const handleClick = (e: React.MouseEvent<HTMLElement | SVGSVGElement>) => {
     e.stopPropagation(); // prevent the click from reaching the parent
@@ -15,7 +15,13 @@ const Tile = ({ onClick }: TileProps) => {
   };
 
   return (
-    <TileBase onClick={handleClick} className="w-32 h-40 cursor-pointer" />
+    <div className="relative inline-block">
+      
+      <TileBase onClick={handleClick} className="h-40 cursor-pointer" />
+      <span className="absolute top-0 left-1/2 transform -translate-x-1/2 text-black">
+        {generatedTile}
+      </span>
+    </div>
   );
 };
 
