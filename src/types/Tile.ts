@@ -4,3 +4,5 @@ export type Tile = {
   name: string;
   Component: FC;
 };
+
+export type TileName = string;

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { Tile } from "../types/Tile";
+import type { Tile, TileName } from "../types/Tile";
 import type { FC } from "react";
 
 // useMahjonggTileData.ts is a custom hook for dynamically generating SVG designs for tiles
@@ -25,9 +25,14 @@ const tileData = import.meta.glob("../assets/tiles/*.svg", {
   eager: true
 });
 
-export function generateTileData(tileData: Tile[]): Tile[] {
+// `(tileData: Tile[]): TileName[]` - (tileData: Tile[]) Function parameter tileData, which must be an array of Tile objects
+//  TileName[] an array of strings, ypeScript expects the function to return an array of strings, not an array of Tile objects.
+export function generateTileData(tileData: Tile[]): TileName[] {
   
-  return tileData;
+  // Extract tile names and put them inside the TileName array of strings
+  const tileNames: TileName[] = tileData.map(tile => tile.name);
+  
+  return tileNames;
 }
 
 export function useMahjonggTileData(): Tile[] {
