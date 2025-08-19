@@ -18,6 +18,7 @@ export function useMahjonggTileState() {
       console.log(tileName + " selected");
     };
 
+    // Creating a custom hook in order to
     const deselectTile = () => setSelectedTile("");
     
     return { selectedTile, handleTileClick, deselectTile };
