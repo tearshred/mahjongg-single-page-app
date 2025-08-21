@@ -5,6 +5,7 @@ import { useMahjonggTileState } from "../hooks/useMahjonggTileState";
 
 const Board = () => {
   const tiles = useMahjonggTileData();
+  console.log("Tile names:", tiles.map(t => t.name));
   const {selectedTile, deselectTile, handleTileClick} = useMahjonggTileState();
 
   return (
@@ -21,7 +22,7 @@ const Board = () => {
           <Tile
             key={index}
             generatedTile={tile.name}
-            onClick={handleTileClick(tile.name)}
+            onClick={() => handleTileClick(tile.name)}
           />
         ))}
       </div>

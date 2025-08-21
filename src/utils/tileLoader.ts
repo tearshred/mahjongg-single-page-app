@@ -14,12 +14,14 @@
 
 export function loadTiles(): Record<string, any> {
   return import.meta.glob("../assets/tiles/*.svg", {
-    eager: true,
+    eager: true, //loads all SVGs immediately at build time,
+    import: "default", //unwraps the SVG so you get the React component directly instead of { default: Component }.
   });
 }
 
 export function loadSharedTiles() : Record<string, any> {
   return import.meta.glob("../assets/shared/*.svg", {
     eager: true,
+    import: "default",
   });
 }
