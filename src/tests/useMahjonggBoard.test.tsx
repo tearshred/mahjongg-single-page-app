@@ -1,41 +1,56 @@
-// Import Vitest utilities
-// describe → groups related tests.
-// it (or test) → defines a single test case.
-// expect → makes assertions about your code’s behavior.
+// Import testing utilities from Vitest and React Testing Library
 import { render } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 
-// Import custom type
-import type { TileName } from "../types/Tile";
+// Import the hook we're testing and its type definition
+import { useMahjonggTileData } from "../hooks/useMahjonggTileData";
+import type { Tile } from "../types/Tile";
 
-// Import functions or hooks to test
-import {
-  useMahjonggTileData,
-  generateTileData,
-} from "../hooks/useMahjonggTileData";
+describe("useMahjonggTileData", () => {
+  // Main test case that verifies the hook's output structure
+  it("should return an array of properly structured tile objects", () => {
+    // Create a variable outside the component to capture hook's return value
+    // We need this because we can't access hook results directly outside React
+    let tiles: Tile[] = [];
 
-// Group all tests for this hook
-describe("generateTileData", () => {
-  // First test case: generate board and inspect
-  it("should create a board array from tileData", () => {
-    // Preparing a variable to hold an array of generated data
-    let board: TileName[] = [];
+    
 
-    // Declaring a test function
-    function MahjonggBoardTest() {
-        const tileCache = useMahjonggTileData();
-        board = generateTileData(tileCache)
-        return null
+    // Create a test component that only exists to run the hook
+    // This is necessary because hooks can only be called inside React components
+    function TestHook() {
+      // Call the hook and store its result in our outer variable
+      tiles = useMahjonggTileData();
+      // Return null because this component doesn't need to render anything
+      return null;
     }
 
-    // `render` mounts this React component into a fake DOM in order to interact with it and make assertions, for testing purposes
-    // The hook `useMahjonggTileData` can only be called inside a comopnent, hence where render comes in. React "Rule of Hooks"
-    // Without render(), React wouldn't call a hook at all, so `tileCache` would never be created
-    // Summary - render() isn’t for the UI, it’s just to execute the hook safely inside React’s lifecycle
-    render(<MahjonggBoardTest /> )
+    // Render our test component in a virtual DOM environment
+    // This triggers the hook to run and populate our tiles array
+    render(<TestHook />);
 
-    console.table(board)
-    expect(board).toBeDefined()
-    expect(board.length).toBeGreaterThan(0);
+    // TEST GROUP 1: Basic Structure Tests
+    // Verify that we got an array and it's not empty
+    expect(Array.isArray(tiles)).toBe(true);
+    expect(tiles.length).toBeGreaterThan(0);
+
+    // TEST GROUP 2: Data Structure Tests
+    // Check every tile object for correct properties and types
+    tiles.forEach((tile) => {
+      // Verify each tile has the required properties
+      expect(tile).toHaveProperty('name');
+      expect(tile).toHaveProperty('Component');
+      
+      // Verify the types of those properties
+      expect(typeof tile.name).toBe('string');
+      // React components are functions under the hood
+      expect(typeof tile.Component).toBe('function');
+    });
+
+    // TEST GROUP 3: Debug Output
+    // Log helpful information for debugging
+    console.log('First tile structure:', {
+      name: tiles[0].name,
+      hasComponent: Boolean(tiles[0].Component)
+    });
   });
 });

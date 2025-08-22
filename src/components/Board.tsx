@@ -2,10 +2,11 @@ import { useEffect, useState, useRef } from "react";
 import Tile from "./Tile";
 import { useMahjonggTileData } from "../hooks/useMahjonggTileData";
 import { useMahjonggTileState } from "../hooks/useMahjonggTileState";
+import type { TileSymbol } from "../types/TileProps";
 
 const Board = () => {
   const tiles = useMahjonggTileData();
-  console.log("Tile names:", tiles.map(t => t.name));
+  //console.log("Tile names:", tiles.map(t => t.name));
   const {selectedTile, deselectTile, handleTileClick} = useMahjonggTileState();
 
   return (
@@ -21,7 +22,8 @@ const Board = () => {
         {tiles.map((tile, index) => (
           <Tile
             key={index}
-            generatedTile={tile.name}
+            name={tile.name}
+            isSelected={selectedTile === tile.name}
             onClick={() => handleTileClick(tile.name)}
           />
         ))}

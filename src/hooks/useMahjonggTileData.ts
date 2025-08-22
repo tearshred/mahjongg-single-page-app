@@ -3,11 +3,10 @@
 import { useMemo } from "react";
 import type { Tile, TileName } from "../types/Tile";
 import type { FC } from "react";
-import { loadTiles,loadSharedTiles } from "../utils/tileLoader";
+import { loadTileSymbols } from "../utils/tileSymbolLoader";
 
 // Imports all SVGs from the tiles folder as React components
-const tileData = loadTiles();
-const tileBase = loadSharedTiles();
+const tileData = loadTileSymbols();
 
 export function generateTileData(tileData: Tile[]): TileName[] {
   // Extract tile names and put them inside the TileName array of strings
@@ -18,8 +17,8 @@ export function generateTileData(tileData: Tile[]): TileName[] {
 
 export function useMahjonggTileData(): Tile[] {
   const tileCache: Tile[] = useMemo(() => {
-    const allTiles = { ...loadSharedTiles(), ...loadTiles() };
-    return Object.entries(allTiles).map(([fullPath, Component]) => {
+    // Convert the tileData object into an array of Tile objects
+    return Object.entries(tileData).map(([fullPath, Component]) => {
       const fileName = fullPath.split("/").pop()!.replace(".svg", "");
 
       return { name: fileName, Component: Component as FC };
@@ -27,6 +26,8 @@ export function useMahjonggTileData(): Tile[] {
   }, [tileData]);
 
   generateTileData(tileCache);
+
+  console.log('useMahjonggTileData returning:', tileCache);
 
   return tileCache;
 }
