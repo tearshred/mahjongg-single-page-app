@@ -22,15 +22,22 @@ export function loadTileSymbols(): TileSymbols{
   // as React components rather than URLs.
   //  // Load all SVG files as React components
   // The <SVGComponent> generic ensures proper typing of the imported components
-  const symbolModules = import.meta.glob<SVGComponent>("../assets/tiles/*.svg?react", {
+  const symbolModules = import.meta.glob<SVGComponent>("../assets/tiles/*.svg", {
     eager: true, //loads all SVGs immediately at build time,
     import: "default", //unwraps the SVG so you get the React component directly instead of { default: Component }.
   });
+
+  // Debug: Log what files were found
+  // console.log('Found SVG files:', Object.keys(symbolModules));
+
 
   // Convert the loaded modules into our standardized TileSymbol format
   const tileSymbolArray = Object.entries(symbolModules).map(([path, Component]) => {
     // Extract name from path (e.g., "Man1" from "/src/assets/tiles/Man1.svg")
     const name = path.split('/').pop()?.replace('.svg', '') || '';
+
+     // Debug: Log each processed tile
+    // console.log('Processing tile:', { path, name });
     
     return {
       name,    // The clean name (e.g., "Man1")
@@ -38,6 +45,10 @@ export function loadTileSymbols(): TileSymbols{
       Component // The React component
     };
   });
+
+  // Debug: Log final structures
+  console.log('Final tile array:', tileSymbolArray.length, 'tiles');
+  console.log('Sample tile:', tileSymbolArray[0]);
 
   // Return both access methods as defined in TileSymbols interface
   return {

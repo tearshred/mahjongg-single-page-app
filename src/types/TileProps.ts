@@ -13,6 +13,7 @@ export interface TileSymbol {
   name: string; // e.g., "Bamboo1", "Pin2"
   path: string; // Full path to SVG file
   Component: SVGComponent; // Using our SVGComponent type
+  value?: string | number;
 }
 
 // Structure returned by the tile loader
@@ -28,6 +29,7 @@ export interface TileSymbols {
 // Props for the main Tile component
 export interface TileProps {
   name: string; // Changed from generatedTile for consistency
+  component: SVGComponent; // Included for type safety; the actual SVG is resolved internally via TileSymbol
   isSelected?: boolean; // For highlighting selected tiles
   onClick?: (e: React.MouseEvent<HTMLElement | SVGSVGElement>) => void;
 }

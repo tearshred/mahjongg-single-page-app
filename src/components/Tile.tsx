@@ -2,7 +2,7 @@ import TileDesign from "./TileDesign";
 import TileBase from "../assets/shared/TileBase.svg?react";
 import type { TileProps, TileDesignProps } from "../types/TileProps";
 
-const Tile = ({ onClick, name, isSelected }: TileProps) => {
+const Tile = ({ onClick, name, isSelected, component }: TileProps) => {
 
   // Creating a wrapper function that stops the propagation first
   const handleClick = (e: React.MouseEvent<HTMLElement | SVGSVGElement>) => {

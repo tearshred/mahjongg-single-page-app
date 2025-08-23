@@ -1,33 +1,25 @@
 // See hooks-explained.md for more detailed explanation
 
 import { useMemo } from "react";
-import type { Tile, TileName } from "../types/Tile";
-import type { FC } from "react";
+import type { TileSymbol, TileSymbols } from "../types/TileProps";
 import { loadTileSymbols } from "../utils/tileSymbolLoader";
 
-// Imports all SVGs from the tiles folder as React components
-const tileData = loadTileSymbols();
+export function useMahjonggTileData(): TileSymbol[] {
+  
+  const tileCache: TileSymbol[] = useMemo(() => {
+    
+    const symbols: TileSymbols = loadTileSymbols();
 
-export function generateTileData(tileData: Tile[]): TileName[] {
-  // Extract tile names and put them inside the TileName array of strings
-  const tileNames: TileName[] = tileData.map((tile) => tile.name);
+    return symbols.asArray;
 
-  return tileNames;
-}
+  }, []);
 
-export function useMahjonggTileData(): Tile[] {
-  const tileCache: Tile[] = useMemo(() => {
-    // Convert the tileData object into an array of Tile objects
-    return Object.entries(tileData).map(([fullPath, Component]) => {
-      const fileName = fullPath.split("/").pop()!.replace(".svg", "");
+  console.log('useMahjonggTileData returning:', {
+    count: tileCache.length,
+    tiles: tileCache.map(t => t.name)
+  });
 
-      return { name: fileName, Component: Component as FC };
-    });
-  }, [tileData]);
-
-  generateTileData(tileCache);
-
-  console.log('useMahjonggTileData returning:', tileCache);
+  console.table(tileCache)
 
   return tileCache;
 }
