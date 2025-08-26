@@ -29,7 +29,6 @@ export interface TileSymbols {
 // Props for the main Tile component
 export interface TileProps {
   name: string; // Changed from generatedTile for consistency
-  component: SVGComponent; // Included for type safety; the actual SVG is resolved internally via TileSymbol
   isSelected?: boolean; // For highlighting selected tiles
   onClick?: (e: React.MouseEvent<HTMLElement | SVGSVGElement>) => void;
 }

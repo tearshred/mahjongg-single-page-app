@@ -25,6 +25,7 @@ export function loadTileSymbols(): TileSymbols{
   const symbolModules = import.meta.glob<SVGComponent>("../assets/tiles/*.svg", {
     eager: true, //loads all SVGs immediately at build time,
     import: "default", //unwraps the SVG so you get the React component directly instead of { default: Component }.
+    query: `?react`,
   });
 
   // Debug: Log what files were found

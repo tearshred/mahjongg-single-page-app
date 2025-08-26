@@ -17,5 +17,29 @@ export function useMahjonggBoard() {
 
   const [boardTiles, setBoardTiles] = useState<TileDataWithState[]>(initialTileState);
 
-  return {boardTiles, setBoardTiles};
+  // 2. ADD THE NEW FUNCTIONS HERE (They use the existing state/setter)
+  const selectTile = (tileName: string) => {
+    setBoardTiles(prevTiles => 
+      prevTiles.map(tile => ({
+        ...tile,
+        isSelected: tile.name === tileName
+      }))
+    );
+  };
+
+  const deselectAllTiles = () => {
+    setBoardTiles(prevTiles => 
+      prevTiles.map(tile => ({ ...tile, isSelected: false }))
+    );
+  };
+
+  const selectedTileName = boardTiles.find(tile => tile.isSelected)?.name || '';
+
+  return {
+    boardTiles, 
+    setBoardTiles,
+    selectTile,
+    deselectAllTiles,
+    selectedTileName
+  };
 }

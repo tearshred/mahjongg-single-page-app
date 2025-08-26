@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import type { Tile, TileName } from "../types/Tile";
+// import type { Tile, TileName } from "../types/Tile";
 
 export function useMahjonggTileState() {
   const [selectedTile, setSelectedTile] = useState<string>(" ");
@@ -14,9 +14,11 @@ export function useMahjonggTileState() {
     // <HTMLElement | SVGSVGElement> means the event could come from a normal HTML element (like <div>) OR an <svg> element
     (e: React.MouseEvent<HTMLElement | SVGSVGElement>) => {
       e.stopPropagation(); // Prevents the parent div's onClick from firing
-      setSelectedTile(tileName + " selected"); // Store the clicked tile's name in state
-      console.log(tileName + " selected");
+      setSelectedTile(tileName); // Store the clicked tile's name in state
+      //console.log(tileName + " selected");
     };
+
+    console.log(selectedTile)
 
     // Creating a custom hook in order to
     const deselectTile = () => setSelectedTile("");

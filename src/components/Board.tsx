@@ -9,6 +9,9 @@ const Board = () => {
   //console.log("Tile names:", tiles.map(t => t.name));
   const {selectedTile, deselectTile, handleTileClick} = useMahjonggTileState();
 
+
+  console.log(selectedTile + " Board")
+
   return (
     <div
       id="main-board"
@@ -24,7 +27,6 @@ const Board = () => {
             key={index}
             name={tile.name}
             isSelected={selectedTile === tile.name}
-            onClick={() => handleTileClick(tile.name)}
           />
         ))}
       </div>
