@@ -31,6 +31,7 @@ export interface TileProps {
   name: string; // Changed from generatedTile for consistency
   isSelected?: boolean; // For highlighting selected tiles
   onClick?: (e: React.MouseEvent<HTMLElement | SVGSVGElement>) => void;
+  onSelect?: () => void; // A void function that does not return anything. It's just an action
 }
 
 // Props passed to the visual part

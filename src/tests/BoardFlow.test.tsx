@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import { loadTileSymbols } from "../utils/tileSymbolLoader";
 import { useMahjonggTileData } from "../hooks/useMahjonggTileData";
 import type { TileSymbol, TileSymbols } from "../types/TileProps";
-import Board from "../components/Board";
+import Board from "../components/Board/Board";
 
 describe("Tile Loading Flow", () => {
   // Test 1: Direct loader test

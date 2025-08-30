@@ -1,16 +1,20 @@
 import TileDesign from "./TileDesign";
 import TileBase from "../assets/shared/TileBase.svg?react";
 import type { TileProps } from "../types/TileProps";
-import { useMahjonggTileState } from "../hooks/useMahjonggTileState";
+import { getTileClassNames } from "../utils/tileStyler";
 
-const Tile = ({ name, onClick, isSelected }: TileProps) => {
+const Tile = ({ name, onSelect, isSelected }: TileProps) => {
+  // Handler for the click event
+  const tileClickHandler = (e: React.MouseEvent<HTMLElement>) => {
+    e.stopPropagation(); // Still need to stop propagation
+    if (onSelect) {
+      // Call the onSelect function provided by the parent (Board.tsx)
+      // `.?` - optional chaining operator, meaning parent might not always pass the prop
+      onSelect?.();
+    }
+  };
 
-   // Use the tile state hook
-  const { handleTileClick } = useMahjonggTileState();
-
-  // The hook returns a function that needs the tile name.
-  // We call it here with this tile's name to get the final click handler.
-  const tileClickHandler = handleTileClick(name);
+   const tileClassNames = getTileClassNames(isSelected ?? false);
 
   return (
     // This wrapper div serves three crucial purposes:
@@ -25,10 +29,10 @@ const Tile = ({ name, onClick, isSelected }: TileProps) => {
     //    captures all clicks within the tile's boundaries and avoids issues with
     //    transparent parts of the SVG or pointer-events.
     <div
-      className="relative inline-block w-30 h-auto cursor-pointer m-1"
+      className={tileClassNames}
       onClick={tileClickHandler}
     >
-      <TileBase className="w-full h-full" />
+      <TileBase className={`w-full h-full ${isSelected ? '!border-4 !border-blue-500' : 'border-4 border-transparent'} hover:border-gray-400`} />
       <TileDesign
         name={name}
         isSelected={isSelected}

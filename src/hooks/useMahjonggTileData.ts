@@ -14,12 +14,5 @@ export function useMahjonggTileData(): TileSymbol[] {
 
   }, []);
 
-  console.log('useMahjonggTileData returning:', {
-    count: tileCache.length,
-    tiles: tileCache.map(t => t.name)
-  });
-
-  console.table(tileCache)
-
   return tileCache;
 }
