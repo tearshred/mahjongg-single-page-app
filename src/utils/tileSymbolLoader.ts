@@ -48,8 +48,8 @@ export function loadTileSymbols(): TileSymbols{
   });
 
   // Debug: Log final structures
-  console.log('Final tile array:', tileSymbolArray.length, 'tiles');
-  console.log('Sample tile:', tileSymbolArray[0]);
+  //console.log('Final tile array:', tileSymbolArray.length, 'tiles');
+  //1console.log('Sample tile:', tileSymbolArray[0]);
 
   // Return both access methods as defined in TileSymbols interface
   return {
