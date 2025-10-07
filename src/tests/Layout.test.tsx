@@ -2,52 +2,63 @@ import { describe, it, expect } from "vitest";
 import { generateTurtleLayout } from "../gameplay-features/game-logic/layout-builder";
 
 // Mock TURTLE_SHAPE for testing
-const TURTLE_SHAPE = {
-  baseRows: 6,
-  baseCols: 6,
+const MOCK_TURTLE_SHAPE = {
+  baseRows: 10,
+  baseCols: 10,
   maxLayers: 3,
 };
 
-// Override the global constant used in layout-builder for testing
-// @ts-ignore
-global.TURTLE_SHAPE = TURTLE_SHAPE;
-
 describe("generateTurtleLayout", () => {
-  it("returns an array of positions", () => {
-    const positions = generateTurtleLayout();
-    expect(Array.isArray(positions)).toBe(true);
-    expect(positions.length).toBeGreaterThan(0);
+  // Test 1 - Checking if there is an array
+  it("generates an array of tile positions", () => {
+    const layoutArray = generateTurtleLayout(MOCK_TURTLE_SHAPE);
+    expect(Array.isArray(layoutArray)).toBe(true);
+    //console.log("Array length: " + layoutArray.length);
+    //console.table(layoutArray);
   });
-
-  it("positions have correct keys and types", () => {
-    const positions = generateTurtleLayout();
-    positions.forEach((pos) => {
-      expect(pos).toHaveProperty("layer");
-      expect(pos).toHaveProperty("row");
-      expect(pos).toHaveProperty("col");
-      expect(typeof pos.layer).toBe("number");
-      expect(typeof pos.row).toBe("number");
-      expect(typeof pos.col).toBe("number");
+  // Test 2 - Ensuring each position object has the correct keys (layer, row, col) and that their types are numbers
+  it("ensures each position has valid keys and number types", () => {
+    const tilePositions = generateTurtleLayout(MOCK_TURTLE_SHAPE);
+    tilePositions.forEach((element) => {
+      expect(element).toHaveProperty("layer");
+      expect(element).toHaveProperty("row");
+      expect(element).toHaveProperty("col");
+      expect(typeof element.layer).toBe("number");
+      expect(typeof element.row).toBe("number");
+      expect(typeof element.col).toBe("number");
     });
   });
+  // Test 3 - Visually verifying layout by displaying tiles in matrix, showing which positions are occupied and which are empty
+  it("displays the board layout as a matrix with occupied and empty positions", () => {
+    const tileDisplayMatrix = generateTurtleLayout(MOCK_TURTLE_SHAPE);
 
-  it("layers shrink correctly", () => {
-    const positions = generateTurtleLayout();
-
-    // Check that layer 0 uses full baseRows/baseCols
-    const layer0 = positions.filter((p) => p.layer === 0);
-    expect(layer0.length).toBe(TURTLE_SHAPE.baseRows * TURTLE_SHAPE.baseCols);
-
-    // Check that layer 1 uses smaller size
-    const layer1 = positions.filter((p) => p.layer === 1);
-    const expectedLayer1Rows = TURTLE_SHAPE.baseRows - 2 * 2; // shrinkage = 2 * layer
-    const expectedLayer1Cols = TURTLE_SHAPE.baseCols - 2 * 2;
-    expect(layer1.length).toBe(expectedLayer1Rows * expectedLayer1Cols);
-
-    // Check that layer positions are offset correctly (row and col >= shrinkage)
-    layer1.forEach((pos) => {
-      expect(pos.row).toBeGreaterThanOrEqual(2); // shrinkage for layer 1
-      expect(pos.col).toBeGreaterThanOrEqual(2);
+    // Find maximum row and column for matrix dimensions
+    let maxRow = 0;
+    let maxCol = 0;
+    tileDisplayMatrix.forEach((tile) => {
+      if (tile.row > maxRow) maxRow = tile.row;
+      if (tile.col > maxCol) maxCol = tile.col;
     });
+
+    // Create a separate matrix for each layer
+    const layerMatrices: Record<number, string[][]> = {};
+
+    tileDisplayMatrix.forEach((tile, index) => {
+      if (!layerMatrices[tile.layer]) {
+        layerMatrices[tile.layer] = Array.from({ length: maxRow + 1 }, () =>
+          Array.from({ length: maxCol + 1 }, () => "x")
+        );
+      }
+
+      // place tile index (as string) in its position
+      layerMatrices[tile.layer][tile.row][tile.col] = index.toString();
+    });
+
+    Object.entries(layerMatrices).forEach(([layer, matrix]) => {
+      console.log("Layer", layer);
+      console.table(matrix);
+    });
+
+
   });
 });

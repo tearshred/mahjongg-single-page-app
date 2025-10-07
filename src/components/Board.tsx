@@ -17,9 +17,9 @@ const Board = () => {
         <h1>{selectedTileName || "No tile selected"}</h1>
       </div>
       <div className="w-screen max-w-screen h-screen flex flex-wrap gap-1 justify-center items-center">
-        {boardTiles.map((tile, index) => (
+        {boardTiles.map(tile => (
           <Tile
-            key={index}
+            key={tile.name}
             name={tile.name}
             isSelected={tile.isSelected}
             onSelect={() => selectTile(tile.name)}

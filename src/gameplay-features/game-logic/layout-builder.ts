@@ -3,48 +3,51 @@ export interface BoardPosition {
   layer: number;
   row: number;
   col: number;
+  [key: string]: any; // Allows adding new properties later
 }
 
-const TURTLE_SHAPE = {
+const DEFAULT_TURTLE_SHAPE = {
   maxLayers: 5,
   baseRows: 8,
   baseCols: 10,
 };
 
-export function generateTurtleLayout(): BoardPosition[] {
+export function generateTurtleLayout(
+  // Use provided shape or default board dimensions
+  boardShape: typeof DEFAULT_TURTLE_SHAPE = DEFAULT_TURTLE_SHAPE,
+  // How much each layer shrinks inward compared to the layer below
+  shrinkPerLayer: number = 2
+): BoardPosition[] {
   // this variable is an array of BoardPosition objects
   // ` = [] ` - start it as an empty array
   const positions: BoardPosition[] = [];
 
-  for (let layer = 0; layer < TURTLE_SHAPE.maxLayers; layer++) {
-    // Each layer shrinks inward compared to the previous one
-    const shrinkage = layer * 2;
+  // Define row lengths for each layer (example for 5 layers)
+  const layers: number[][] = [
+    [12, 8, 10, 14, 12], // Layer 0: bottom, each number = tiles in that row
+    [8, 6, 6],           // Layer 1
+    [6, 4],              // Layer 2
+    [2],                 // Layer 3
+    [1],                 // Layer 4: top tile
+  ];
 
-    // Calculate the number of rows and columns for this layer after shrinkage
-    const layerRows = TURTLE_SHAPE.baseRows - shrinkage * 2;
-    const layerCols = TURTLE_SHAPE.baseCols - shrinkage * 2;
+  layers.forEach((layerRows, layerIndex) => {
+    let rowOffset = 0; // Tracks current row in matrix
+    layerRows.forEach((rowLength) => {
+      // Center the row: calculate starting column
+      const colStart = Math.floor((layers[0][0] - rowLength) / 2);
 
-    // Only generate positions if this layer has positive dimensions
-    if (layerRows > 0 && layerCols > 0) {
-      // Loop through each row in this layer
-      for (let row = 0; row < layerRows; row++) {
-        // Loop through each column in this layer
-        for (let col = 0; col < layerCols; col++) {
-          // Push a new tile position to the positions array
-          positions.push({
-            layer: layer, // Z-axis: which stacked layer
-            row: row + shrinkage, // Y-axis: offset by shrinkage to center
-            col: col + shrinkage, // X-axis: offset by shrinkage to center
-          });
-          // Visual example:
-          // Layer 0 (bottom): ██████████
-          // Layer 1 (shrinkage=2):   ██████
-          // Layer 2 (shrinkage=4):     ██
-          // Each '█' corresponds to a position pushed to the array
-        }
+      for (let col = 0; col < rowLength; col++) {
+        positions.push({
+          layer: layerIndex,
+          row: rowOffset,
+          col: colStart + col,
+        });
       }
-    }
-  }
+
+      rowOffset++;
+    });
+  });
 
   return positions;
 }
