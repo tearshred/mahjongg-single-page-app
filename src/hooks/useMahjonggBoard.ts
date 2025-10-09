@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMahjonggTileData } from "./useMahjonggTileData";
 import type { TileDataWithState } from "../types/TileState";
 import type { MahjonggBoardAPI } from "../types/BoardAPI";
+import { generateTurtleLayout } from "../gameplay-features/game-logic/layout-builder";
 
 // Tells TypeScript: "This function promises to return an object that
 // matches the MahjonggBoardAPI structure."
@@ -18,8 +19,17 @@ export function useMahjonggBoard(): MahjonggBoardAPI {
     value: tile.value ?? tile.name, // fallback in case value is undefined
   }));
 
+  // Generating layout positions
+  const positions = generateTurtleLayout();
+
+  // Merge each tile with its corresponding position
+  const positionedTiles: TileDataWithState[] = initialTileState.map((tile, index) => ({
+    ...tile,
+    position: positions[index],
+  }));
+
   const [boardTiles, setBoardTiles] =
-    useState<TileDataWithState[]>(initialTileState);
+    useState<TileDataWithState[]>(positionedTiles);
 
   // 2. ADD THE NEW FUNCTIONS HERE (They use the existing state/setter)
   const selectTile = (tileName: string) => {

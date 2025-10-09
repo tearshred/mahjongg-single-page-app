@@ -4,16 +4,14 @@ import { describe, it, expect } from "vitest";
 
 // Import the hook we're testing and its type definition
 import { useMahjonggTileData } from "../hooks/useMahjonggTileData";
-import type { Tile } from "../types/Tile";
+import type { TileSymbol } from "../types/TileProps";
 
 describe("useMahjonggTileData", () => {
   // Main test case that verifies the hook's output structure
   it("should return an array of properly structured tile objects", () => {
     // Create a variable outside the component to capture hook's return value
     // We need this because we can't access hook results directly outside React
-    let tiles: Tile[] = [];
-
-    
+    let tiles: TileSymbol[] = [];
 
     // Create a test component that only exists to run the hook
     // This is necessary because hooks can only be called inside React components

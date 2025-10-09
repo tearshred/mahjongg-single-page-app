@@ -1,9 +1,11 @@
 import Tile from "./Tile";
 import { useMahjonggBoard } from "../hooks/useMahjonggBoard";
 
+const TILE_SIZE = 16;
+
 const Board = () => {
- 
-  const {boardTiles, selectedTileName, deselectAllTiles, selectTile} = useMahjonggBoard();
+  const { boardTiles, selectedTileName, deselectAllTiles, selectTile } =
+    useMahjonggBoard();
 
   //console.log(selectedTileName + " Board")
 
@@ -17,14 +19,26 @@ const Board = () => {
         <h1>{selectedTileName || "No tile selected"}</h1>
       </div>
       <div className="w-screen max-w-screen h-screen flex flex-wrap gap-1 justify-center items-center">
-        {boardTiles.map(tile => (
-          <Tile
-            key={tile.name}
-            name={tile.name}
-            isSelected={tile.isSelected}
-            onSelect={() => selectTile(tile.name)}
-          />
-        ))}
+        {boardTiles.map((tile) => {
+          console.table(tile.position);
+          return (
+            <div
+              key={tile.name}
+              className="absolute"
+              style={{
+                top: tile.position ? tile.position.row * TILE_SIZE : 0,
+                left: tile.position ? tile.position.col * TILE_SIZE : 0,
+                zIndex: tile.position ? tile.position.layer : 0,
+              }}
+            >
+              <Tile
+                name={tile.name}
+                isSelected={tile.isSelected}
+                onSelect={() => selectTile(tile.name)}
+              />
+            </div>
+          );
+        })}
       </div>
     </div>
   );

@@ -33,9 +33,10 @@ export function generateTurtleLayout(
 
   layers.forEach((layerRows, layerIndex) => {
     let rowOffset = 0; // Tracks current row in matrix
+
     layerRows.forEach((rowLength) => {
-      // Center the row: calculate starting column
-      const colStart = Math.floor((layers[0][0] - rowLength) / 2);
+      // Center row relative to Layer 0 width
+      const colStart = Math.max(0, Math.floor((layers[0][0] - rowLength) / 2));
 
       for (let col = 0; col < rowLength; col++) {
         positions.push({
