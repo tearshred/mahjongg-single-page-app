@@ -6,7 +6,7 @@
  * Does NOT assign symbols or React components — only defines fixed layer layouts.
  *
  * Data Flow:
- * layout-builder.ts → useMahjonggBoard.ts → Board.tsx → Tile.tsx → TileDesign.tsx → User Interaction/Game Logic
+ * layout-builder.ts → board-builder → useMahjonggBoard.ts → Board.tsx → Tile.tsx → TileDesign.tsx → User Interaction/Game Logic
  *
  * Instructions for future use in a new chat:
  * 1. Provide this file as-is.
