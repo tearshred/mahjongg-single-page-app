@@ -4,7 +4,7 @@ import type {
   LayoutName,
   BoardLayoutOptions,
 } from "../types/BoardLayouts";
-import { turtleLayout } from "../gameplay-features/layouts/turtle-layout"; // Default layout function
+import { generateTurtleLayout } from "../gameplay-features/game-logic/layout-builder";
 
 export function useBoardLayout({
   // This is destructuring from the function parameter.
@@ -18,7 +18,7 @@ export function useBoardLayout({
     switch (layout as LayoutName) {
       case "turtle":
       default:
-        return turtleLayout();
+        return generateTurtleLayout();
     }
      // [] - the function only recomputes if the dependency changes, in this case `layout`
   }, [layout]);

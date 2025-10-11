@@ -44,6 +44,13 @@ describe("Layout generation test", () => {
       console.table(tiles.map((t) => ({ row: t.row, col: t.col })));
     });
 
+    // Total tiles
+    const totalTiles = Object.values(layers).reduce(
+      (sum, tiles) => sum + tiles.length,
+      0
+    );
+    console.log("Total tiles on board:", totalTiles);
+    
     expect(Array.isArray(positions)).toBe(true);
     expect(positions.length).toBeGreaterThan(0);
 
