@@ -13,20 +13,13 @@ const TileDesign = ({
   const { getTileDesign } = useMahjonggTileDesign();
 
   const SymbolComponent = getTileDesign(name);
-  
+
   // Safety check
   if (!SymbolComponent) {
     return null;
   }
 
-  return (
-    <div className={`${isSelected ? "z-10" : ""}`}>
-      <SymbolComponent 
-        className={className}
-        onClick={onClick}
-      />
-    </div>
-  );
+  return <SymbolComponent className={className} onClick={onClick} />;
 };
 
 export default TileDesign;

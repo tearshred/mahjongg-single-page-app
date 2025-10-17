@@ -37,3 +37,23 @@ export const DEFAULT_TURTLE_SHAPE: BoardShape = {
   baseRows: 8,
   baseCols: 10,
 };
+
+// Purpose: Defines the "invisible grid" for each layer. Layer 0 gets 15×8, Layer 1 gets 6×6, etc.
+export interface VirtualGrid {
+  columns: number;
+  rows: number;
+  cellSize: number;
+}
+
+// Purpose: Stores the translated position from backend coordinates to CSS Grid coordinates.
+export interface GridPosition {
+  gridRow: number;
+  gridColumn: number;
+  layer: number;
+}
+
+// Extends LayoutPosition with virtual grid data for CSS positioning while preserving original coordinates
+export interface EnhancedLayoutPosition extends LayoutPosition {
+  virtualPosition?: GridPosition;  // The CSS Grid position
+  rowLength?: number;              // How many tiles in this specific row
+}

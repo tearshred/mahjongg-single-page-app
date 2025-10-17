@@ -14,7 +14,7 @@ const Tile = ({ name, onSelect, isSelected }: TileProps) => {
     }
   };
 
-   const tileClassNames = getTileClassNames(isSelected ?? false);
+  const tileClassNames = getTileClassNames(isSelected ?? false);
 
   return (
     // This wrapper div serves three crucial purposes:
@@ -29,14 +29,18 @@ const Tile = ({ name, onSelect, isSelected }: TileProps) => {
     //    captures all clicks within the tile's boundaries and avoids issues with
     //    transparent parts of the SVG or pointer-events.
     <div
-      className={tileClassNames}
       onClick={tileClickHandler}
+      className="relative inline-block w-[112px] h-[150px] cursor-pointer"
     >
-      <TileBase className={`w-full h-full ${isSelected ? '!border-4 !border-blue-500' : 'border-4 border-transparent'} hover:border-gray-400`} />
+      <TileBase
+        className={`block w-full h-full ${
+          isSelected ? "!outline-4 !outline-blue-500" : "outline-none"
+        } hover:!outline-gray-400`}
+      />
       <TileDesign
         name={name}
         isSelected={isSelected}
-        className="absolute top-0 left-0 p-4 w-full h-full pointer-events-none"
+        className="absolute inset-0 p-3 w-full h-full pointer-events-none"
       />
     </div>
   );

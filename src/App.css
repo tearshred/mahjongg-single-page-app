@@ -4,3 +4,11 @@
 body {
   background-color: #242424;
 }
+
+/* Simple 15-column grid for Layer 0 */
+.layer-0-grid {
+  display: grid;
+  grid-template-columns: repeat(15, 60px);
+  grid-template-rows: repeat(8, 60px);
+  gap: 2px;
+}

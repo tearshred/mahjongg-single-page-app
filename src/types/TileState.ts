@@ -8,10 +8,14 @@ export interface TileDataWithState extends TileSymbol {
   isHighlighted: boolean;
   value: string | number;
   position?: {
-    // Making the field optional because tiles don't have positions before layout assignment
+    // Backend coordinates
     layer: number;
     row: number;
     col: number;
+
+    // CSS Grid coordinates for rendering
+    gridRow: number;
+    gridColumn: number;
   };
 }
 
