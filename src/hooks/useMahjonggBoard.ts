@@ -1,58 +1,63 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useMahjonggTileData } from "./useMahjonggTileData";
 import type { TileDataWithState } from "../types/TileState";
 import type { MahjonggBoardAPI } from "../types/BoardAPI";
 import { generateTurtleLayout } from "../gameplay-features/game-logic/layout-builder";
-import { computeVirtualGrids, getRowTileCount, computeGridPosition } from "../utils/layoutMapper";
+import {
+  computeVirtualGrids,
+  getRowTileCount,
+  computeGridPosition,
+} from "../utils/layoutMapper";
+import { assignRandomTiles } from "../utils/tileRandomizer"; // ✅ added
 
 // Tells TypeScript: "This function promises to return an object that
 // matches the MahjonggBoardAPI structure."
 export function useMahjonggBoard(): MahjonggBoardAPI {
-  // Storing the list of tiles inside the `tileData` variable
+  // 1. Load tile metadata. Storing the list of tiles inside the `tileData` variable
   const tileData = useMahjonggTileData();
 
-  // Mapping the metadata to a combined TileDataWithState
-  const initialTileState: TileDataWithState[] = tileData.map((tile) => ({
-    ...tile, // metadata: name, path, Component, value
-    isSelected: false, // initial UI state
-    isClicked: false, // initial UI state
-    isHighlighted: false, // optional UI state
-    value: tile.value ?? tile.name, // fallback in case value is undefined
-  }));
+  // 2. Generate the backend layout positions (row, col, layer)
+  const positions = useMemo(() => generateTurtleLayout(), []);
 
-  // Generate the backend layout positions (row, col, layer)
-  const positions = generateTurtleLayout();
-  // Compute virtual grids for each layer
+  // 3. Compute virtual grids for each layer
   //    - This defines the invisible grid structure per layer
-  const virtualGrids = computeVirtualGrids(positions);
+  const virtualGrids = useMemo(() => computeVirtualGrids(positions), [positions]);
 
-  // 5. Merge tile metadata with backend positions AND compute CSS Grid coordinates
-const positionedTiles: TileDataWithState[] = initialTileState.map((tile, index) => {
-  const backendPos = positions[index];                     // row/col/layer from backend
-  const layerGrid = virtualGrids[backendPos.layer];        // virtual grid for this tile's layer
-  const rowTileCount = getRowTileCount(positions, backendPos.layer, backendPos.row); // tiles in this row
+  // 4. Merge metadata + UI state + backend positions
+  // ✅ assignRandomTiles handles random tile assignment for all positions
+  const initialTiles = useMemo(() => {
+    const tilesWithRandom = assignRandomTiles(positions, tileData);
 
-  // Combine backend coordinates with CSS Grid coordinates
-  const gridPos = computeGridPosition(backendPos, rowTileCount, layerGrid);
+    return tilesWithRandom.map((tile, index) => {
+      const backendPos = positions[index];
+      const layerGrid = virtualGrids[backendPos.layer];
+      const rowTileCount = getRowTileCount(
+        positions,
+        backendPos.layer,
+        backendPos.row
+      );
+      const gridPos = computeGridPosition(backendPos, rowTileCount, layerGrid);
 
-  // Functionally, the tile now carries both backend reference coordinates and 
-  // frontend grid coordinates, making the system future-proof and responsive.
-  return {
-    ...tile,
-    position: {
-      ...backendPos, // keeps {row, col, layer} for TileDataWithState
-      ...gridPos,    // adds {gridRow, gridColumn} for CSS Grid
-    },
-  };
-});
+      const tileWithState: TileDataWithState = {
+        ...tile,
+        position: {
+          ...backendPos, // backend coordinates
+          ...gridPos, // CSS Grid coordinates
+        },
+      };
 
+      return tileWithState;
+    });
+  }, [positions, tileData, virtualGrids]);
+
+  // 5. React state for board tiles
   const [boardTiles, setBoardTiles] =
-    useState<TileDataWithState[]>(positionedTiles);
+    useState<TileDataWithState[]>(initialTiles);
 
-  // 2. ADD THE NEW FUNCTIONS HERE (They use the existing state/setter)
+  // 6️⃣ Selection API
   const selectTile = (tileName: string) => {
-    setBoardTiles((prevTiles) =>
-      prevTiles.map((tile) => ({
+    setBoardTiles((prev) =>
+      prev.map((tile) => ({
         ...tile,
         isSelected: tile.name === tileName,
       }))
@@ -60,8 +65,8 @@ const positionedTiles: TileDataWithState[] = initialTileState.map((tile, index) 
   };
 
   const deselectAllTiles = () => {
-    setBoardTiles((prevTiles) =>
-      prevTiles.map((tile) => ({ ...tile, isSelected: false }))
+    setBoardTiles((prev) =>
+      prev.map((tile) => ({ ...tile, isSelected: false }))
     );
   };
 

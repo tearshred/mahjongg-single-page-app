@@ -1,64 +1,43 @@
-1. useMahjonggTileData.ts
-   - Purpose: Extract tile metadata from SVGs (name + path).
-   - Output: Array of TileSymbol objects: [{ name, path, Component }]
-   - Pure data hook — no state, no rendering.
-   - Consumed by: useMahjonggBoard.ts (for initializing board tiles).
+Mahjongg Board Debug Prompt
 
-2. useMahjonggTileDesign.ts
-   - Purpose: Load SVG files as React components.
-   - Output: Object mapping SVG path → React component.
-   - Pure rendering hook — no state.
-   - Consumed by: TileDesign.tsx via props, or directly by Tile.tsx.
+I’m building a Mahjongg game in React + TypeScript. I need help rendering the board layout correctly with random tiles, proper CSS Grid placement, and selectable tiles.
 
-3. useMahjonggTileState.ts
-   - Purpose: Manage per-tile UI state (e.g., isSelected, isClicked, isHighlighted).
-   - Output: Functions and state objects: getTileState(name), setTileState(name, newState)
-   - Consumed by: Tile.tsx (tile container) and useMahjonggBoard.ts (aggregate state).
+Goals
 
-4. useMahjonggBoard.ts
-   - Purpose: Orchestrate the board.
-       a) Fetch tile metadata from useMahjonggTileData
-       b) Load SVG components from useMahjonggTileDesign
-       c) Maintain state via useMahjonggTileState
-       d) Pass props to Tile.tsx
-   - Output: Array of tiles ready to render, each with:
-       - name
-       - Component
-       - state (isSelected, isClicked)
-       - event handlers (onClick, etc.)
-   - Consumed by: Board.tsx component for rendering the full board.
+Display Layer 0 first, then stack all layers with correct z-index.
 
-5. Tile.tsx
-   - Purpose: Tile container
-       - Handles click events
-       - Applies selection/highlight logic
-       - Passes rendering props to TileDesign
-   - Receives:
-       - name
-       - Component (from tileDesigns)
-       - state (isSelected, etc.)
-       - onClick handler
-   - Consumed by: Board.tsx (iterates tiles array)
+Tiles must align perfectly with the grid.
 
-6. TileDesign.tsx
-   - Purpose: Pure visual renderer
-       - Only renders the SVG component
-       - Accepts className and click handler for styling and interaction
-   - Receives:
-       - Component (SVG)
-       - className
-       - onClick
-   - No state
+Tile symbols (TileDesign) overlay TileBase correctly.
 
-## Hook relationship diagram
+Tiles are selectable (isSelected) without regenerating the board.
 
-Board.tsx
-  ├─> useMahjonggBoard.ts
-        ├─> useMahjonggTileData.ts       (tile metadata: name, path)
-        ├─> useMahjonggTileDesign.ts     (SVG components)
-        └─> useMahjonggTileState.ts      (state management)
-  └─> Tiles Array
-        ├─> Tile.tsx
-        │    ├─> TileDesign.tsx         (renders SVG)
-        │    └─> handles click & state update
-        └─> repeats for each tile
+Each layout cell displays a random tile for testing.
+
+Key Files
+
+Board.tsx – Renders the board, maps TileDataWithState to Tile components.
+
+Tile.tsx – Renders TileBase + TileDesign, handles clicks.
+
+TileDesign.tsx – Displays the correct symbol for a tile.
+
+useMahjonggBoard.ts – Hook managing board state, tile positions, and selection.
+
+useMahjonggTileData.ts – Provides tile metadata.
+
+layout-builder.ts – Generates turtle layout positions.
+
+layoutMapper.ts – Computes CSS Grid positions and row centering.
+
+tileRandomizer.ts – Assigns random tiles to positions.
+
+boardHelper.ts – Filters tiles by layer and computes grid size.
+
+Relationships
+
+Board.tsx → uses useMahjonggBoard() + Tile.tsx
+
+Tile.tsx → uses TileDesign.tsx
+
+useMahjonggBoard.ts → uses useMahjonggTileData(), generateTurtleLayout(), layoutMapper.ts, tileRandomizer.ts

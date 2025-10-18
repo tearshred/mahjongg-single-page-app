@@ -1,44 +1,23 @@
+import { useMemo } from "react";
 import Tile from "./Tile";
 import { useMahjonggBoard } from "../hooks/useMahjonggBoard";
-import { useMahjonggTileData } from "../hooks/useMahjonggTileData";
-import { generateTurtleLayout } from "../gameplay-features/game-logic/layout-builder";
+import { filterLayer, computeGridSize } from "../utils/boardHelper";
 
 const Board = () => {
   const { boardTiles, selectedTileName, deselectAllTiles, selectTile } =
     useMahjonggBoard();
 
-// Tile pool for random assignment
-  const tileData = useMahjonggTileData();
+  // 1️⃣ Filter tiles for layer 0 (can extend to multiple layers later)
+  const layer0Tiles = useMemo(() => filterLayer(boardTiles, 0), [boardTiles]);
 
-  // Backend layout positions
-  const positions = generateTurtleLayout();
-
-  // Assign a random tile to each position
-  const randomizedTiles = positions.map((pos) => {
-    const randomTile = tileData[Math.floor(Math.random() * tileData.length)];
-    return {
-      ...randomTile,
-      position: pos,
-      isSelected: false,
-    };
-  });
-
-    
-  //console.log(selectedTileName + " Board")
-  const layer0Tiles = randomizedTiles.filter((t) => t.position.layer === 0);
-
-  // Compute maximum columns and rows from tile positions
-  const maxCol =
-    Math.max(...boardTiles.map((t) => t.position?.gridColumn || 1)) || 1;
-  const maxRow =
-    Math.max(...boardTiles.map((t) => t.position?.gridRow || 1)) || 1;
+  // 2️⃣ Compute CSS Grid size based on tile positions
+  const { maxCol, maxRow } = useMemo(() => computeGridSize(boardTiles), [boardTiles]);
 
   return (
     <div id="main-board" className="w-screen h-screen relative">
-      
-      {/* Background layer used for deselecting tiles */}
+      {/* Background layer for deselect */}
       <div className="absolute inset-0" onClick={deselectAllTiles}></div>
-      
+
       {/* Header showing selected tile */}
       <div className="w-screen flex justify-center items-center">
         <h1>{selectedTileName || "No tile selected"}</h1>
@@ -46,7 +25,7 @@ const Board = () => {
 
       {/* Grid container for tiles */}
       <div
-        className="inline-grid z-10 relative"
+        className="inline-grid relative z-10"
         style={{
           gridTemplateColumns: `repeat(${maxCol}, auto)`,
           gridTemplateRows: `repeat(${maxRow}, auto)`,
@@ -57,14 +36,15 @@ const Board = () => {
           <div
             key={tile.name + tile.position.row + tile.position.col}
             style={{
-              gridRowStart: tile.position.row + 1, // CSS Grid is 1-based
-              gridColumnStart: tile.position.col + 1,
+              gridRowStart: tile.position.gridRow, // ✅ use computed gridRow
+              gridColumnStart: tile.position.gridColumn, // ✅ use computed gridColumn
               zIndex: tile.position.layer,
             }}
           >
             <Tile
               name={tile.name}
               isSelected={tile.isSelected}
+              onSelect={() => selectTile(tile.name)} // ✅ selection updates state without regenerating
             />
           </div>
         ))}

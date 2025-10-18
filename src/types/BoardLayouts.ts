@@ -47,13 +47,21 @@ export interface VirtualGrid {
 
 // Purpose: Stores the translated position from backend coordinates to CSS Grid coordinates.
 export interface GridPosition {
+  // Backend coordinates
+  layer: number;
+  row: number;
+  col: number;
+
+  // CSS Grid coordinates for rendering
   gridRow: number;
   gridColumn: number;
-  layer: number;
+
+  // Optional offset for floating tiles
+  offsetY?: number;
 }
 
 // Extends LayoutPosition with virtual grid data for CSS positioning while preserving original coordinates
 export interface EnhancedLayoutPosition extends LayoutPosition {
-  virtualPosition?: GridPosition;  // The CSS Grid position
-  rowLength?: number;              // How many tiles in this specific row
+  virtualPosition?: GridPosition; // The CSS Grid position
+  rowLength?: number; // How many tiles in this specific row
 }

@@ -18,10 +18,10 @@ export const bottomLayer: LayerGrid = [
 ];
 
 // Floating tiles outside main grid
-const floatingTiles = [
-  { row: 4, col: 1 },   // left
-  { row: 4, col: 14 },  // right
-  { row: 0, col: 14 },  // top
+const floatingTiles: LayoutPosition[] = [
+  { row: 4, col: 1, layer: 0 },   // left
+  { row: 4, col: 14, layer: 0 },  // right
+  { row: 0, col: 14, layer: 0 },  // top
 ];
 
 // Utility to get center subset of a row
@@ -48,6 +48,16 @@ const layer3 = generateLayer(layer2.slice(1,3), layer2x2Widths);      // pick mi
 const layer4 = generateLayer(layer3.slice(0,1), layer1Width);         // single center tile
 
 // NEW: Return full layout as a grid (array of layers with rows of column indices)
-export const turtleLayout = (): LayoutGrid => {
-  return [bottomLayer, layer1, layer2, layer3, layer4];
+// export const turtleLayout = (): LayoutGrid => {
+//   return [bottomLayer, layer1, layer2, layer3, layer4];
+// };
+
+export const turtleLayout = (): { layers: LayoutGrid; floating: LayoutPosition[] } => {
+  const floating: LayoutPosition[] = floatingTiles.map(t => ({
+    row: t.row,
+    col: t.col,
+    layer: 0, // bottom layer
+  }));
+
+  return { layers: [bottomLayer, layer1, layer2, layer3, layer4], floating };
 };
