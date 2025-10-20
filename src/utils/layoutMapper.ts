@@ -75,5 +75,6 @@ export function computeGridPosition(
     gridColumn: startCol + backendPos.col + 1,
     layer: backendPos.layer,
     offsetY: backendPos.floating ? 0.5 : 0, // ✅ fractional offset for floating tiles
+    floating: backendPos.floating
   };
 }

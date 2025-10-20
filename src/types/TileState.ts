@@ -8,16 +8,20 @@ export interface TileDataWithState extends TileSymbol {
   isSelected: boolean;
   isClicked: boolean;
   isHighlighted: boolean;
-  floating: boolean;
+  floating?: boolean;
   value: string | number;
   position: GridPosition;
 }
 
-// Add this new interface to the same file
 export interface MahjonggBoardAPI {
   boardTiles: TileDataWithState[];
   selectTile: (tileName: string) => void;
   deselectAllTiles: () => void;
   selectedTileName: string;
   // Add any other functions or values your hook returns
+}
+
+export interface TileSize {
+  width: number;
+  height: number;
 }

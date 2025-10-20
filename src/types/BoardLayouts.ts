@@ -11,6 +11,11 @@ export interface LayoutPosition {
   [key: string]: any; // For extra metadata like tile ID, highlight, etc.
 }
 
+export type FloatingPosition = {
+    type: 'left' | 'right';
+    index: number;  // 0 for left, 13 or 14 for right
+};
+
 // Allowed layout names
 export type LayoutName = "turtle"; // Extendable later
 
@@ -58,6 +63,8 @@ export interface GridPosition {
 
   // Optional offset for floating tiles
   offsetY?: number;
+
+  floating: boolean;
 }
 
 // Extends LayoutPosition with virtual grid data for CSS positioning while preserving original coordinates
