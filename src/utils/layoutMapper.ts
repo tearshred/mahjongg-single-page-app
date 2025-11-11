@@ -66,13 +66,13 @@ export function computeGridPosition(
   rowTileCount: number,
   layerGrid: VirtualGrid
 ): GridPosition {
-  const startCol = Math.floor((layerGrid.columns - rowTileCount) / 2);
+  // const startCol = Math.floor((layerGrid.columns - rowTileCount) / 2);
 
   return {
     row: backendPos.row,                  // ✅ backend row
     col: backendPos.col,                  // ✅ backend col
     gridRow: backendPos.row + 1,
-    gridColumn: startCol + backendPos.col + 1,
+    gridColumn: backendPos.col + 1,
     layer: backendPos.layer,
     offsetY: backendPos.floating ? 0.5 : 0, // ✅ fractional offset for floating tiles
     floating: backendPos.floating
