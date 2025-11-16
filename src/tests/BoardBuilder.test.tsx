@@ -20,7 +20,7 @@ describe("Board Builder - Layer 0 Tests", () => {
     }
 
     it("correctly positions tiles in layer 0", () => {
-        const mockTiles = createMockTiles(144);
+        const mockTiles = createMockTiles(147);
         const assignedTiles = assignTilePositions(mockTiles);
         
         // Filter only layer 0 tiles

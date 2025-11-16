@@ -1,4 +1,4 @@
-import { bottomLayer } from "../layouts/turtle-layout";
+import { floatingTiles, bottomLayer } from "../layouts/turtle-layout";
 import type { LayoutGrid, LayerRow, LayerGrid } from "../layouts/turtle-layout";
 import type { LayoutPosition } from "../../types/BoardLayouts";
 
@@ -70,6 +70,8 @@ export function generateTurtleLayout(): LayoutPosition[] {
   //console.log('Generating Layer 4 (1x1)');
   const layer4 = generateLayer(layer3.slice(0, 1), [1]);
   positions.push(...flattenLayer(layer4, 4));
+
+  positions.push(...floatingTiles)
 
   // Final layout statistics
   console.log('Final layout statistics:', {

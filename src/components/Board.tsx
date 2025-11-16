@@ -1,19 +1,21 @@
 import { useMemo } from "react";
 import Tile from "./Tile";
 import { useMahjonggBoard } from "../hooks/useMahjonggBoard";
-import { filterLayer, computeGridSize } from "../utils/boardHelper";
+import { filterLayer } from "../utils/boardHelper";
 import { useTileSize } from "../hooks/useTileSize";
+import { turtleGridDimensions } from "../gameplay-features/layouts/turtle-layout";
 
 const Board = () => {
   const { boardTiles, selectedTileName, deselectAllTiles, selectTile } =
     useMahjonggBoard();
   
-  const { tileRef, tileSize } = useTileSize();
+  const { tileRef } = useTileSize();
   const layer0Tiles = useMemo(() => filterLayer(boardTiles, 0), [boardTiles]);
-  const { maxCol, maxRow } = useMemo(
-    () => computeGridSize(boardTiles),
-    [boardTiles]
-  );
+  
+  // v1: Using explicit turtle layout dimensions
+  // TODO: Make dynamic when supporting multiple layouts
+  const maxCol = turtleGridDimensions.columns;
+  const maxRow = turtleGridDimensions.rows;
 
   return (
     <div id="main-board" className="w-screen h-screen relative">
@@ -24,7 +26,7 @@ const Board = () => {
       </div>
 
       {/* Center the grid container */}
-      <div className="w-full flex justify-center items-center">
+      <div className="w-full h-screen flex justify-center items-center">
         <div
           className="inline-grid relative z-10"
           style={{
@@ -39,25 +41,13 @@ const Board = () => {
             <div
               key={tile.name + tile.position.row + tile.position.col}
               ref={tile.position.row === 0 && tile.position.col === 0 ? tileRef : undefined}
-              className={`
-                ${tile.floating ? "absolute" : ""}
-                transition-all duration-200 ease-in-out
-              `}
-              style={
-                tile.floating
-                  ? {
-                      top: `${tile.position.row * tileSize.height + 
-                           ((tile.position.offsetY ?? 0) * tileSize.height)}px`,
-                      left: `${tile.position.col * tileSize.width}px`,
-                      transform: 'translate(-50%, -50%)', // Center the floating tile
-                      zIndex: tile.position.layer,
-                    }
-                  : {
-                      gridRowStart: tile.position.gridRow,
-                      gridColumnStart: tile.position.gridColumn,
-                      zIndex: tile.position.layer,
-                    }
-              }
+              className="transition-all duration-200 ease-in-out"
+              style={{
+                gridRow: tile.position.gridRow,
+                gridColumn: tile.position.gridColumn,
+                transform: tile.position.floating ? 'translateY(-50%)' : 'none',
+                zIndex: tile.position.layer,
+              }}
             >
               <Tile
                 name={tile.name}

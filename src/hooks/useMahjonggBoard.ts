@@ -30,13 +30,7 @@ export function useMahjonggBoard(): MahjonggBoardAPI {
 
     return tilesWithRandom.map((tile, index) => {
       const backendPos = positions[index];
-      const layerGrid = virtualGrids[backendPos.layer];
-      const rowTileCount = getRowTileCount(
-        positions,
-        backendPos.layer,
-        backendPos.row
-      );
-      const gridPos = computeGridPosition(backendPos, rowTileCount, layerGrid);
+      const gridPos = computeGridPosition(backendPos);
 
       const tileWithState: TileDataWithState = {
         ...tile,

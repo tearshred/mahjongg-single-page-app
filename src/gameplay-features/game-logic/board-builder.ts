@@ -2,16 +2,13 @@ import { generateTurtleLayout } from "./layout-builder";
 import type { TileDataWithState } from "../../types/TileState";
 import type { LayoutPosition } from "../../types/BoardLayouts";
 import type { GridPosition } from "../../types/BoardLayouts";
-import { computeVirtualGrids, getRowTileCount, computeGridPosition } from "../../utils/layoutMapper";
+import { computeGridPosition } from "../../utils/layoutMapper";
 
 // Helper function to convert LayoutPosition to GridPosition using proper centering logic
-function convertToGridPosition(pos: LayoutPosition, allPositions: LayoutPosition[]): GridPosition {
-    const virtualGrids = computeVirtualGrids(allPositions);
-    const rowTileCount = getRowTileCount(allPositions, pos.layer, pos.row);
-    const layerGrid = virtualGrids[pos.layer];
+function convertToGridPosition(pos: LayoutPosition): GridPosition {
     
     return {
-        ...computeGridPosition(pos, rowTileCount, layerGrid),
+        ...computeGridPosition(pos),
         floating: pos.floating || false,
     };
 }
@@ -48,7 +45,7 @@ export default function assignTilePositions(tiles: TileDataWithState[]): TileDat
                 const tile = tiles[tileIndex];
                 assignedTiles.push({
                     ...tile,
-                    position: convertToGridPosition(position, positions),
+                    position: convertToGridPosition(position),
                     isSelected: false,
                     isHighlighted: false,
                     isClicked: false,

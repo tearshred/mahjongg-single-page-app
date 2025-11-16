@@ -26,7 +26,7 @@ export function computeVirtualGrids(
 
   // Calculate grid dimensions for each layer
   return Array.from(positionsByLayer.entries()).map(
-    ([layer, layerPositions]) => {
+    ([_layer, layerPositions]) => {
       // Find the maximum row and column values in this layer
       // Add 1 because positions are 0-based but counts are 1-based
       const maxRow = Math.max(...layerPositions.map((p) => p.row)) + 1;
@@ -63,8 +63,6 @@ export function getRowTileCount(
 
 export function computeGridPosition(
   backendPos: LayoutPosition,
-  rowTileCount: number,
-  layerGrid: VirtualGrid
 ): GridPosition {
   // const startCol = Math.floor((layerGrid.columns - rowTileCount) / 2);
 
@@ -73,8 +71,12 @@ export function computeGridPosition(
     col: backendPos.col,                  // ✅ backend col
     gridRow: backendPos.row + 1,
     gridColumn: backendPos.col + 1,
+    // Adding fractional positioning for floating tiles
+    gridRowFractional: backendPos.floating 
+      ? `${backendPos.row + 1.5} / ${backendPos.row + 2.5}` // Makes it in-between rows.
+      : undefined,
     layer: backendPos.layer,
-    offsetY: backendPos.floating ? 0.5 : 0, // ✅ fractional offset for floating tiles
+    //offsetY: backendPos.floating ? 0.5 : 0, // ✅ fractional offset for floating tiles
     floating: backendPos.floating
   };
 }

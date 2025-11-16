@@ -5,12 +5,21 @@ export type LayerRow = number[];      // Columns with tiles
 export type LayerGrid = LayerRow[];   // Array of rows
 export type LayoutGrid = LayerGrid[]; // All layers
 
+// Explicit grid dimensions for turtle layout
+export const turtleGridDimensions = {
+  columns: 15,  // 0-14
+  rows: 8,      // 0-7
+};
+
+// 
+
+
 // Bottom layer (8x15)
 export const bottomLayer: LayerGrid = [
   [1,2,3,4,5,6,7,8,9,10,11,12],       // row 0 → 12 tiles
   [3,4,5,6,7,8,9,10],                 // row 1 → 8 tiles
   [2,3,4,5,6,7,8,9,10,11],            // row 2 → 10 tiles
-  [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14], // row 3 → 15 tiles (center row)
+  [1,2,3,4,5,6,7,8,9,10,11,12], // row 3 → 15 tiles (center row)
   [1,2,3,4,5,6,7,8,9,10,11,12],       // row 4 → 12 tiles
   [2,3,4,5,6,7,8,9,10,11],            // row 5 → 10 tiles
   [3,4,5,6,7,8,9,10],                 // row 6 → 8 tiles
@@ -18,10 +27,10 @@ export const bottomLayer: LayerGrid = [
 ];
 
 // Floating tiles outside main grid
-const floatingTiles: LayoutPosition[] = [
-  { row: 4, col: 1, layer: 0 },   // left
-  { row: 4, col: 14, layer: 0 },  // right
-  { row: 0, col: 14, layer: 0 },  // top
+export const floatingTiles: LayoutPosition[] = [
+  { row: 4, col: 0, layer: 0, floating: true },   // left
+  { row: 4, col: 13, layer: 0, floating: true },  // right
+  { row: 4, col: 14, layer: 0, floating: true },  // top
 ];
 
 // Utility to get center subset of a row

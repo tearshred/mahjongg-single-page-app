@@ -60,6 +60,7 @@ export interface GridPosition {
   // CSS Grid coordinates for rendering
   gridRow: number;
   gridColumn: number;
+  gridRowFractional?: string; // Optional: "4.5 / 5.5" for floating. used for splitting the row for easier rendering
 
   // Optional offset for floating tiles
   offsetY?: number;

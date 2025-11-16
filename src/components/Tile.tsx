@@ -30,7 +30,7 @@ const Tile = ({ name, onSelect, isSelected }: TileProps) => {
     //    transparent parts of the SVG or pointer-events.
     <div
       onClick={tileClickHandler}
-      className="relative inline-block w-[112px] h-[150px] cursor-pointer"
+      className="relative block w-[112px] h-[150px] cursor-pointer"
     >
       <TileBase
         className={`block w-full h-full ${
