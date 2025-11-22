@@ -1,4 +1,5 @@
-import type { LayoutPosition } from "../../types/BoardLayouts";
+import type { Grid3D } from "../../types/game-logic";
+import { createEmptyLayer, markTilesInLayer, STANDARD_GRID } from "../game-logic/grid-system";
 
 // types
 export type LayerRow = number[];      // Columns with tiles
@@ -12,61 +13,124 @@ export const turtleGridDimensions = {
 };
 
 // 
-
-
-// Bottom layer (8x15)
-export const bottomLayer: LayerGrid = [
-  [1,2,3,4,5,6,7,8,9,10,11,12],       // row 0 → 12 tiles
-  [3,4,5,6,7,8,9,10],                 // row 1 → 8 tiles
-  [2,3,4,5,6,7,8,9,10,11],            // row 2 → 10 tiles
-  [1,2,3,4,5,6,7,8,9,10,11,12], // row 3 → 15 tiles (center row)
-  [1,2,3,4,5,6,7,8,9,10,11,12],       // row 4 → 12 tiles
-  [2,3,4,5,6,7,8,9,10,11],            // row 5 → 10 tiles
-  [3,4,5,6,7,8,9,10],                 // row 6 → 8 tiles
-  [1,2,3,4,5,6,7,8,9,10,11,12],       // row 7 → 12 tiles
-];
-
-// Floating tiles outside main grid
-export const floatingTiles: LayoutPosition[] = [
-  { row: 4, col: 0, layer: 0, floating: true },   // left
-  { row: 4, col: 13, layer: 0, floating: true },  // right
-  { row: 4, col: 14, layer: 0, floating: true },  // top
-];
-
-// Utility to get center subset of a row
-function centerRow(row: number[], targetWidth: number): number[] {
-  const start = Math.floor((row.length - targetWidth) / 2);
-  return row.slice(start, start + targetWidth);
+// NEW: Create layer 0 using grid system
+function createLayer0(): Grid3D[0] {  // Returns one GridLayer (8×15 boolean grid)
+  // Step 1: Create empty 8×15 grid (all false)
+  const emptyLayer = createEmptyLayer(STANDARD_GRID.rows, STANDARD_GRID.columns);
+  
+  // Step 2: Define where tiles go (converting from your bottomLayer)
+  const tilePositions = [
+    // Row 0: columns 1-12 (tiles in positions 1,2,3,4,5,6,7,8,9,10,11,12)
+    // Empty: 0, 13, 14
+    ...Array.from({ length: 12 }, (_, i) => ({ row: 0, col: i + 1 })),
+    
+    // Row 1: columns 3-10 (tiles in positions 3,4,5,6,7,8,9,10)
+    // Empty: 0, 1, 2, 11, 12, 13, 14
+    ...Array.from({ length: 8 }, (_, i) => ({ row: 1, col: i + 3 })),
+    
+    // Row 2: columns 2-11 (tiles in positions 2,3,4,5,6,7,8,9,10,11)
+    // Empty: 0, 1, 12, 13, 14
+    ...Array.from({ length: 10 }, (_, i) => ({ row: 2, col: i + 2 })),
+    
+    // Row 3: columns 1-12 (tiles in positions 1,2,3,4,5,6,7,8,9,10,11,12)
+    // Empty: 0, 13, 14
+    ...Array.from({ length: 12 }, (_, i) => ({ row: 3, col: i + 1 })),
+    
+    // Row 4: columns 0-14 (ALL positions have tiles, including 3 floating)
+    // Regular tiles: 1-12
+    ...Array.from({ length: 12 }, (_, i) => ({ row: 4, col: i + 1 })),
+    // Floating tiles: 0, 13, 14
+    { row: 4, col: 0, floating: true },
+    { row: 4, col: 13, floating: true },
+    { row: 4, col: 14, floating: true },
+    
+    // Row 5: columns 2-11 (tiles in positions 2,3,4,5,6,7,8,9,10,11)
+    // Empty: 0, 1, 12, 13, 14
+    ...Array.from({ length: 10 }, (_, i) => ({ row: 5, col: i + 2 })),
+    
+    // Row 6: columns 3-10 (tiles in positions 3,4,5,6,7,8,9,10)
+    // Empty: 0, 1, 2, 11, 12, 13, 14
+    ...Array.from({ length: 8 }, (_, i) => ({ row: 6, col: i + 3 })),
+    
+    // Row 7: columns 1-12 (tiles in positions 1,2,3,4,5,6,7,8,9,10,11,12)
+    // Empty: 0, 13, 14
+    ...Array.from({ length: 12 }, (_, i) => ({ row: 7, col: i + 1 })),
+  ];
+  
+  // Step 3: Mark those positions as true
+  return markTilesInLayer(emptyLayer, tilePositions);
 }
 
-// Generate a layer by shrinking each row
-function generateLayer(previousLayer: LayerGrid, rowWidths: number[]): LayerGrid {
-  return rowWidths.map((width, i) => centerRow(previousLayer[i], width));
+// NEW: Create layer 1 using grid system (6x6 centered)
+function createLayer1(): Grid3D[1] {
+  const emptyLayer = createEmptyLayer(STANDARD_GRID.rows, STANDARD_GRID.columns);
+  
+  // Layer 1: 6x6 centered in 8x15 grid
+  // Rows: 1-6 (centered vertically)
+  // Cols: 4-9 (centered horizontally)
+  const tilePositions = [];
+  for (let row = 1; row <= 6; row++) {
+    for (let col = 4; col <= 9; col++) {
+      tilePositions.push({ row, col });
+    }
+  }
+  
+  return markTilesInLayer(emptyLayer, tilePositions);
 }
 
-// Define row widths for each layer
-const layer6x6Widths = [6,6,6,6,6,6];   // 6x6 layer (6 tiles in each row)
-const layer4x4Widths = [4,4,4,4];       // 4x4 layer
-const layer2x2Widths = [2,2];           // 2x2 layer
-const layer1Width = [1];                // single tile
+// NEW: Create layer 2 using grid system (4x4 centered)
+function createLayer2(): Grid3D[2] {
+  const emptyLayer = createEmptyLayer(STANDARD_GRID.rows, STANDARD_GRID.columns);
+  
+  // Layer 2: 4x4 centered in 8x15 grid
+  // Rows: 2-5 (centered vertically)
+  // Cols: 5-8 (centered horizontally)
+  const tilePositions = [];
+  for (let row = 2; row <= 5; row++) {
+    for (let col = 5; col <= 8; col++) {
+      tilePositions.push({ row, col });
+    }
+  }
+  
+  return markTilesInLayer(emptyLayer, tilePositions);
+}
 
-// Generate all layers
-const layer1 = generateLayer(bottomLayer.slice(1,7), layer6x6Widths); // pick rows 1-6
-const layer2 = generateLayer(layer1.slice(1,5), layer4x4Widths);      // pick middle rows
-const layer3 = generateLayer(layer2.slice(1,3), layer2x2Widths);      // pick middle rows
-const layer4 = generateLayer(layer3.slice(0,1), layer1Width);         // single center tile
+// NEW: Create layer 3 using grid system (2x2 centered)
+function createLayer3(): Grid3D[3] {
+  const emptyLayer = createEmptyLayer(STANDARD_GRID.rows, STANDARD_GRID.columns);
+  
+  // Layer 3: 2x2 centered in 8x15 grid
+  // Rows: 3-4 (centered vertically)
+  // Cols: 6-7 (centered horizontally)
+  const tilePositions = [
+    { row: 3, col: 6 }, { row: 3, col: 7 },
+    { row: 4, col: 6 }, { row: 4, col: 7 }
+  ];
+  
+  return markTilesInLayer(emptyLayer, tilePositions);
+}
 
-// NEW: Return full layout as a grid (array of layers with rows of column indices)
-// export const turtleLayout = (): LayoutGrid => {
-//   return [bottomLayer, layer1, layer2, layer3, layer4];
-// };
+// NEW: Create layer 4 using grid system (1x1 centered)
+function createLayer4(): Grid3D[4] {
+  const emptyLayer = createEmptyLayer(STANDARD_GRID.rows, STANDARD_GRID.columns);
+  
+  // Layer 4: 1x1 centered in 8x15 grid
+  // Row: 3 (center of 0-7)
+  // Col: 7 (center of 0-14)
+  const tilePositions = [
+    { row: 3, col: 7 }
+  ];
+  
+  return markTilesInLayer(emptyLayer, tilePositions);
+}
 
-export const turtleLayout = (): { layers: LayoutGrid; floating: LayoutPosition[] } => {
-  const floating: LayoutPosition[] = floatingTiles.map(t => ({
-    row: t.row,
-    col: t.col,
-    layer: 0, // bottom layer
-  }));
-
-  return { layers: [bottomLayer, layer1, layer2, layer3, layer4], floating };
+// Grid system format - Returns Grid3D (5 layers of 8x15 grids)
+export const turtleLayout = (): Grid3D => {
+  return [
+    createLayer0(),
+    createLayer1(),
+    createLayer2(),
+    createLayer3(),
+    createLayer4()
+  ];
 };
