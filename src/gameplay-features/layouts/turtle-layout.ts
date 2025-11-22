@@ -1,15 +1,11 @@
 import type { Grid3D } from "../../types/game-logic";
 import { createEmptyLayer, markTilesInLayer, STANDARD_GRID } from "../game-logic/grid-system";
 
-// types
-export type LayerRow = number[];      // Columns with tiles
-export type LayerGrid = LayerRow[];   // Array of rows
-export type LayoutGrid = LayerGrid[]; // All layers
-
 // Explicit grid dimensions for turtle layout
-export const turtleGridDimensions = {
-  columns: 15,  // 0-14
-  rows: 8,      // 0-7
+export const turtleMetadata = {
+  gridDimensions: { rows: 8, columns: 15 },
+  layerCount: 5,
+  renderConfig: { layersToRender: [0, 1, 2, 3, 4] }
 };
 
 // 

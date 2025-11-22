@@ -1,31 +1,14 @@
-import { turtleLayout } from "../layouts/turtle-layout";
 import { extractTilePositions } from "./grid-system";
 import type { LayoutPosition } from "../../types/BoardLayouts";
+import type { Grid3D } from "../../types/game-logic";
 
 /**
- * Generate the full Turtle layout using the new grid system
+ * Generate tile positions from a 3D grid layout
+ * @param grid3D - The 3D grid containing tile placement data
+ * @returns Array of layout positions for all tiles
  */
-export function generateTurtleLayout(): LayoutPosition[] {
-  // Step 1: Get the full 3D grid (5 layers of 8x15 grids)
-  const grid3D = turtleLayout();
-  
-  // Step 2: Extract positions where tiles exist
-  // This scans the grid and creates LayoutPosition objects for each 'tile' or 'floating' cell
-  const positions = extractTilePositions(grid3D);
-  
-  // Step 3: Log statistics for debugging
-  // console.log('Final layout statistics:', {
-  //   totalTiles: positions.length,
-  //   byLayer: positions.reduce((acc, pos) => {
-  //     acc[pos.layer] = (acc[pos.layer] || 0) + 1;
-  //     return acc;
-  //   }, {} as Record<number, number>),
-  //   dimensions: {
-  //     maxRow: Math.max(...positions.map(p => p.row)),
-  //     maxCol: Math.max(...positions.map(p => p.col)),
-  //     layers: Math.max(...positions.map(p => p.layer)) + 1
-  //   }
-  // });
-  
-  return positions;
+export function generateLayout(grid3D: Grid3D): LayoutPosition[] {
+  return extractTilePositions(grid3D);
 }
+
+

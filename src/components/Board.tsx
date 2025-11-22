@@ -1,21 +1,29 @@
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import Tile from "./Tile";
 import { useMahjonggBoard } from "../hooks/useMahjonggBoard";
 import { filterLayer } from "../utils/boardHelper";
 import { useTileSize } from "../hooks/useTileSize";
-import { turtleGridDimensions } from "../gameplay-features/layouts/turtle-layout";
+import { useLayoutConfig } from "../hooks/useLayoutConfig";
 
 const Board = () => {
   const { boardTiles, selectedTile, deselectAllTiles, selectTile } =
     useMahjonggBoard();
+  const { gridDimensions } = useLayoutConfig(); // Get dynamic dimensions
   
   const { tileRef } = useTileSize();
-  const layer0Tiles = useMemo(() => filterLayer(boardTiles, 0), [boardTiles]);
   
-  // v1: Using explicit turtle layout dimensions
-  // TODO: Make dynamic when supporting multiple layouts
-  const maxCol = turtleGridDimensions.columns;
-  const maxRow = turtleGridDimensions.rows;
+  // Dynamic dimensions
+  const maxCol = gridDimensions.columns;
+  const maxRow = gridDimensions.rows;
+
+  // Layer visibility state for debugging
+  const [visibleLayers, setVisibleLayers] = useState([true, true, true, true, true]);
+
+  // Filter tiles based on visible layers
+  const visibleTiles = useMemo(() => 
+    boardTiles.filter(tile => visibleLayers[tile.position.layer]), 
+    [boardTiles, visibleLayers]
+  );
 
   return (
     <div id="main-board" className="w-screen h-screen relative">
@@ -24,6 +32,29 @@ const Board = () => {
       <div className="w-screen flex justify-center items-center">
         <h1>{selectedTile ? `${selectedTile.name} at (layer ${selectedTile.position.layer}, row ${selectedTile.position.row}, column ${selectedTile.position.col})` : "No tile selected"}</h1>
       </div>
+
+      {/* Layer visibility controls (temporary for debugging) */}
+      <div className="absolute text-2xl top-8 left-4 p-2 rounded shadow z-50 flex gap-2">
+        {[0, 1, 2, 3, 4].map(layer => (
+          <label key={layer} className="flex items-center gap-1">
+            <input
+              type="checkbox"
+              checked={visibleLayers[layer]}
+              onChange={() => setVisibleLayers(prev => 
+                prev.map((visible, i) => i === layer ? !visible : visible)
+              )}
+            />
+            Layer {layer}
+          </label>
+        ))} 
+      </div>
+
+      {/* No visible layers message */}
+{visibleTiles.length === 0 && (
+  <div className="flex items-center justify-center text-4xl bg-opacity-75 z-50">
+    No visible layers
+  </div>
+)}
 
       {/* Center the grid container */}
       <div className="w-full h-screen flex justify-center items-center">
@@ -38,9 +69,10 @@ const Board = () => {
             transformStyle: 'preserve-3d' // Preserve 3D positioning
           }}
         >
-          {layer0Tiles.map((tile) => (
+          {visibleTiles.map((tile) => (
             <div
-              key={tile.name + tile.position.row + tile.position.col}
+            // Unique key including layer to prevent React reusing DOM elements for same tile across layers
+              key={`${tile.name}-${tile.position.layer}-${tile.position.row}-${tile.position.col}`}
               ref={tile.position.row === 0 && tile.position.col === 0 ? tileRef : undefined}
               className="transition-all duration-200 ease-in-out"
               style={{

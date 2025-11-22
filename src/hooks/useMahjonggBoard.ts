@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useMahjonggTileData } from "./useMahjonggTileData";
 import type { TileDataWithState } from "../types/TileState";
 import type { MahjonggBoardAPI } from "../types/BoardAPI";
-import { generateTurtleLayout } from "../gameplay-features/game-logic/layout-builder";
+import { useLayoutConfig } from "./useLayoutConfig";
 import {
   computeVirtualGrids,
   computeGridPosition,
@@ -16,8 +16,12 @@ export function useMahjonggBoard(): MahjonggBoardAPI {
   // 1. Load tile metadata. Storing the list of tiles inside the `tileData` variable
   const tileData = useMahjonggTileData();
 
-  // 2. Generate the backend layout positions (row, col, layer)
-  const positions = useMemo(() => generateTurtleLayout(), []);
+  // 2. Get layout configuration (includes memoized positions)
+  // Get just the positions instead of getting everything and then extract, explanation:
+  // const allConfig = useLayoutConfig();      
+  // const positions = allConfig.positions; 
+  // The destructuring is a convenient shortcut for "I only want this one thing from the returned object"!
+  const { positions } = useLayoutConfig();
 
   // 3. Compute virtual grids for each layer
   //    - This defines the invisible grid structure per layer
