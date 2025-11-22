@@ -5,10 +5,10 @@ import type { MahjonggBoardAPI } from "../types/BoardAPI";
 import { generateTurtleLayout } from "../gameplay-features/game-logic/layout-builder";
 import {
   computeVirtualGrids,
-  getRowTileCount,
   computeGridPosition,
 } from "../utils/layoutMapper";
 import { assignRandomTiles } from "../utils/tileRandomizer"; // ✅ added
+import { isExactTile } from "../utils/tileUtils";
 
 // Tells TypeScript: "This function promises to return an object that
 // matches the MahjonggBoardAPI structure."
@@ -49,12 +49,18 @@ export function useMahjonggBoard(): MahjonggBoardAPI {
     useState<TileDataWithState[]>(initialTiles);
 
   // 6️⃣ Selection API
-  const selectTile = (tileName: string) => {
+  const selectTile = (clickedTile: TileDataWithState) => {
     setBoardTiles((prev) =>
-      prev.map((tile) => ({
-        ...tile,
-        isSelected: tile.name === tileName,
-      }))
+      prev.map((tile) => {
+      if (isExactTile(clickedTile, tile)) {
+        return {
+          ...tile,
+          isSelected: !tile.isSelected,
+          isHighlighted: true,  // Add highlighting here
+        };
+      }
+      return tile;
+    })
     );
   };
 
@@ -64,13 +70,13 @@ export function useMahjonggBoard(): MahjonggBoardAPI {
     );
   };
 
-  const selectedTileName =
-    boardTiles.find((tile) => tile.isSelected)?.name || "";
+  const selectedTile =
+    boardTiles.find((tile) => tile.isSelected) || null;
 
   return {
     boardTiles,
     selectTile,
     deselectAllTiles,
-    selectedTileName,
+    selectedTile,
   };
 }

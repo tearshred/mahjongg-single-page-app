@@ -1,5 +1,5 @@
 import { floatingTiles, bottomLayer } from "../layouts/turtle-layout";
-import type { LayoutGrid, LayerRow, LayerGrid } from "../layouts/turtle-layout";
+import type { LayerGrid } from "../layouts/turtle-layout";
 import type { LayoutPosition } from "../../types/BoardLayouts";
 
 /**

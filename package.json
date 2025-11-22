@@ -11,8 +11,11 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.4.0",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "three": "^0.181.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
@@ -21,6 +24,7 @@
     "@testing-library/react": "^16.3.0",
     "@types/react": "^19.1.9",
     "@types/react-dom": "^19.1.7",
+    "@types/three": "^0.181.0",
     "@vitejs/plugin-react": "^4.7.0",
     "@vitest/ui": "^3.2.4",
     "autoprefixer": "^10.4.21",

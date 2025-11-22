@@ -1,5 +1,5 @@
 import TileDesign from "./TileDesign";
-import TileBase from "../assets/shared/TileBase.svg?react";
+import TileBase3D from "../assets/shared/TileBase3D.svg?react";
 import type { TileProps } from "../types/TileProps";
 import { getTileClassNames } from "../utils/tileStyler";
 
@@ -30,12 +30,12 @@ const Tile = ({ name, onSelect, isSelected }: TileProps) => {
     //    transparent parts of the SVG or pointer-events.
     <div
       onClick={tileClickHandler}
-      className="relative block w-[112px] h-[150px] cursor-pointer"
+      className={`relative block w-[112px] h-[150px] cursor-pointer transition-all duration-200 ease-in-out hover:scale-105 ${
+        isSelected ? "ring-4 ring-red-500 rounded-lg" : ""
+      }`}
     >
-      <TileBase
-        className={`block w-full h-full ${
-          isSelected ? "!outline-4 !outline-blue-500" : "outline-none"
-        } hover:!outline-gray-400`}
+      <TileBase3D
+        className="block w-full h-full"
       />
       <TileDesign
         name={name}

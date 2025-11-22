@@ -14,11 +14,11 @@ export interface MahjonggBoardAPI {
   boardTiles: TileDataWithState[];
 
   /**
-   * Selects a specific tile by its name and deselects all others.
-   * This is an action/command that modifies the state.
-   * @param tileName - The name of the tile to select (e.g., "Bamboo1")
+   * Toggles the selection state of a specific tile.
+   * Identifies the tile by its unique position on the board.
+   * @param tile - The tile object to select/deselect
    */
-  selectTile: (tileName: string) => void;
+  selectTile: (tile: TileDataWithState) => void;
 
   /**
    * Deselects every tile on the board.
@@ -27,10 +27,11 @@ export interface MahjonggBoardAPI {
   deselectAllTiles: () => void;
 
   /**
-   * The name of the currently selected tile, or an empty string if none is selected.
-   * This is a derived value for convenience, easily calculated from boardTiles.
+   * The currently selected tile object.
+   * Null if no tile is selected.
+   * This is derived/computed state.
    */
-  selectedTileName: string;
+  selectedTile: TileDataWithState | null;
 
   // Future-proofing: Placeholder for essential game logic functions.
   /**
@@ -38,7 +39,7 @@ export interface MahjonggBoardAPI {
    * (To be implemented in the future)
    */
   // checkMatch: () => boolean;
-  
+
   /**
    * Removes matched tiles from the board.
    * (To be implemented in the future)

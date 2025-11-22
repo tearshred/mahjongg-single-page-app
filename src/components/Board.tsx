@@ -6,7 +6,7 @@ import { useTileSize } from "../hooks/useTileSize";
 import { turtleGridDimensions } from "../gameplay-features/layouts/turtle-layout";
 
 const Board = () => {
-  const { boardTiles, selectedTileName, deselectAllTiles, selectTile } =
+  const { boardTiles, selectedTile, deselectAllTiles, selectTile } =
     useMahjonggBoard();
   
   const { tileRef } = useTileSize();
@@ -22,19 +22,20 @@ const Board = () => {
       <div className="absolute inset-0" onClick={deselectAllTiles}></div>
 
       <div className="w-screen flex justify-center items-center">
-        <h1>{selectedTileName || "No tile selected"}</h1>
+        <h1>{selectedTile ? `${selectedTile.name} at (layer ${selectedTile.position.layer}, row ${selectedTile.position.row}, column ${selectedTile.position.col})` : "No tile selected"}</h1>
       </div>
 
       {/* Center the grid container */}
       <div className="w-full h-screen flex justify-center items-center">
         <div
-          className="inline-grid relative z-10"
+          className="inline-grid relative z-10 perspective-1000"
           style={{
             gridTemplateColumns: `repeat(${maxCol}, minmax(min-content, max-content))`,
             gridTemplateRows: `repeat(${maxRow}, minmax(min-content, max-content))`,
             gap: 0,
             justifyItems: 'center', // Center items horizontally in their grid cells
             alignItems: 'center',   // Center items vertically in their grid cells
+            transformStyle: 'preserve-3d' // Preserve 3D positioning
           }}
         >
           {layer0Tiles.map((tile) => (
@@ -52,7 +53,7 @@ const Board = () => {
               <Tile
                 name={tile.name}
                 isSelected={tile.isSelected}
-                onSelect={() => selectTile(tile.name)}
+                onSelect={() => selectTile(tile)}
               />
             </div>
           ))}
