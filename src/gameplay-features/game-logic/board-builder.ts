@@ -1,5 +1,5 @@
 import { generateTurtleLayout } from "./layout-builder";
-import type { TileDataWithState } from "../../types/TileState";
+import type { TileDataWithState } from "../../types/tile-meta";
 import type { LayoutPosition } from "../../types/BoardLayouts";
 import type { GridPosition } from "../../types/BoardLayouts";
 import { computeGridPosition } from "../../utils/layoutMapper";
@@ -9,7 +9,7 @@ function convertToGridPosition(pos: LayoutPosition): GridPosition {
     
     return {
         ...computeGridPosition(pos),
-        floating: pos.floating || false,
+        floating: pos.floating ?? 'none',
     };
 }
 
@@ -50,7 +50,7 @@ export default function assignTilePositions(tiles: TileDataWithState[]): TileDat
                     isHighlighted: false,
                     isClicked: false,
                     value: tile.name,
-                    floating: position.floating || false
+                    floating: position.floating ?? 'none'
                 });
                 tileIndex++;
             });

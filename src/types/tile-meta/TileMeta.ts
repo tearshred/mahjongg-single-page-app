@@ -1,9 +1,6 @@
-// Bringing in the metadata from TileProps.ts so we can extend it
-import type { TileSymbol } from "./TileProps";
-import type { GridPosition } from "./BoardLayouts";
-
-/** Directional offset for exposed/floating tiles */
-export type FloatingDirection = "none" | "top" | "bottom" | "left" | "right";
+import type { TileSymbol } from "./TileUiProps";
+import type { GridPosition } from "../BoardLayouts";
+import type { FloatingDirection } from "./shared";
 
 // Creates a new interface that inherits all metadata (name, path, Component)
 export interface TileDataWithState extends TileSymbol {

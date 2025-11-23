@@ -159,18 +159,18 @@ describe("Grid System - All Layers Visualization", () => {
         // Layer 4: 1x1 centered
         // Row: 3, Col: 7
         const tilePositions = [
-            { row: 3, col: 7 }
+            { row: 3, col: 7, floating: true }
         ];
 
         markTiles(grid, tilePositions);
-        displayGrid(grid, "Layer 4 (Top/1x1) - 🀄=tile");
+        displayGrid(grid, "Layer 4 (Top/1x1) - 🎈=floating");
 
-        // Verify tile count (1 tile)
-        const tileCount = grid.flat().filter(cell => cell === '🀄').length;
+        // Verify tile count (1 tile, floating)
+        const tileCount = grid.flat().filter(cell => cell === '🀄' || cell === '🎈').length;
         expect(tileCount).toBe(1);
         
-        // Verify position
-        expect(grid[3][7]).toBe('🀄');
+        // Verify position is floating
+        expect(grid[3][7]).toBe('🎈');
     });
 
     it("verifies all layers combined (Total tile count)", () => {

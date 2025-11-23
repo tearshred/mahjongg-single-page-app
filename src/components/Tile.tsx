@@ -1,9 +1,19 @@
 import TileDesign from "./TileDesign";
-import TileBase3D from "../assets/shared/TileBase3D.svg?react";
-import type { TileProps } from "../types/TileProps";
-import { getTileClassNames } from "../utils/tileStyler";
+import TileBaseRect from "../assets/shared/TileBaseRect.svg?react";
+import { useTileSize } from "../hooks/useTileSize";
+import type { TileProps } from "../types/tile-meta";
 
-const Tile = ({ name, onSelect, isSelected }: TileProps) => {
+// The Tile component now accepts optional floating/offset props and
+// computes pixel transforms using the measured tile size for pixel-perfect
+// alignment of floating tiles.
+const Tile = ({
+  name,
+  onSelect,
+  isSelected,
+  floating: _floating,
+  offsetX,
+  offsetY,
+}: TileProps) => {
   // Handler for the click event
   const tileClickHandler = (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation(); // Still need to stop propagation
@@ -14,7 +24,25 @@ const Tile = ({ name, onSelect, isSelected }: TileProps) => {
     }
   };
 
-  const tileClassNames = getTileClassNames(isSelected ?? false);
+  // Measure this tile so we can convert fractional offsets into pixels
+  const { tileRef, tileSize } = useTileSize();
+  const translateX = (offsetX ?? 0) * (tileSize.width || 0);
+  const translateY = (offsetY ?? 0) * (tileSize.height || 0);
+  const transformStyle = {
+    transform: `translate(${translateX}px, ${translateY}px)`,
+  };
+
+  // Debugging: log offsets/computed pixels for floating tiles
+  if ((offsetX ?? 0) !== 0 || (offsetY ?? 0) !== 0) {
+    // eslint-disable-next-line no-console
+    console.debug(`Tile:${name} offsets:`, {
+      offsetX,
+      offsetY,
+      tileSize,
+      translateX,
+      translateY,
+    });
+  }
 
   return (
     // This wrapper div serves three crucial purposes:
@@ -29,14 +57,14 @@ const Tile = ({ name, onSelect, isSelected }: TileProps) => {
     //    captures all clicks within the tile's boundaries and avoids issues with
     //    transparent parts of the SVG or pointer-events.
     <div
+      ref={tileRef}
       onClick={tileClickHandler}
-      className={`relative block w-[112px] h-[150px] cursor-pointer transition-all duration-200 ease-in-out hover:scale-105 ${
-        isSelected ? "ring-4 ring-red-500 rounded-lg" : ""
+      style={transformStyle}
+      className={`relative block w-[112px] h-[150px] cursor-pointer tile-3d tile-3d-corner ${
+        isSelected ? "ring-4 ring-red-500" : ""
       }`}
     >
-      <TileBase3D
-        className="block w-full h-full"
-      />
+      <TileBaseRect className="block w-full h-full tile-base-border" />
       <TileDesign
         name={name}
         isSelected={isSelected}

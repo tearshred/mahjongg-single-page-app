@@ -1,4 +1,4 @@
-import type { TileDataWithState } from "../types/TileState";
+import type { TileDataWithState } from "../types/tile-meta";
 
 export const isExactTile = (
     clickedTile: TileDataWithState,   // The tile the user clicked

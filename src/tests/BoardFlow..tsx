@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { loadTileSymbols } from "../utils/tileSymbolLoader";
 import { useMahjonggTileData } from "../hooks/useMahjonggTileData";
-import type { TileSymbol, TileSymbols } from "../types/TileProps";
+import type { TileSymbol, TileSymbols } from "../types/tile-meta";
 import Board from "../components/Board";
 
 describe("Tile Loading Flow", () => {
@@ -47,7 +47,7 @@ describe("Tile Loading Flow", () => {
 
   // Test 3: Full component chain
   it("Board should render tiles with correct data-testid", () => {
-    const { container } = render(<Board />);
+    render(<Board />);
     
     // Check for both base tiles and symbols
     const tileSymbols = screen.getAllByTestId("tile-symbol");

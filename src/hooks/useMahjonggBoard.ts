@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useMahjonggTileData } from "./useMahjonggTileData";
-import type { TileDataWithState } from "../types/TileState";
+import type { TileDataWithState } from "../types/tile-meta";
 import type { MahjonggBoardAPI } from "../types/BoardAPI";
 import { useLayoutConfig } from "./useLayoutConfig";
 import {

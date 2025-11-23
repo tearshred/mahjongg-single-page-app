@@ -1,4 +1,5 @@
 // types/BoardLayouts.ts
+import type { FloatingDirection } from './tile-meta';
 
 /**
  * Represents the position of a single tile on the board.
@@ -63,9 +64,11 @@ export interface GridPosition {
   gridRowFractional?: string; // Optional: "4.5 / 5.5" for floating. used for splitting the row for easier rendering
 
   // Optional offset for floating tiles
+  offsetX?: number;
   offsetY?: number;
 
-  floating: boolean;
+  // Floating direction (when a tile sits between rows/columns). Uses canonical FloatingDirection.
+  floating?: FloatingDirection;
 }
 
 // Extends LayoutPosition with virtual grid data for CSS positioning while preserving original coordinates

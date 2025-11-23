@@ -12,7 +12,7 @@
 //   eager: true
 // });
 
-import type { TileSymbols, SVGComponent } from "../types/TileProps";
+import type { TileSymbols, SVGComponent } from "../types/tile-meta";
 
 export function loadTileSymbols(): TileSymbols{
   // Vite's glob import for SVG files in the tiles directory

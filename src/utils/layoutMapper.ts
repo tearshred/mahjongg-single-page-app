@@ -4,6 +4,21 @@ import type {
   GridPosition,
 } from "../types/BoardLayouts";
 
+import type { FloatingDirection } from "../types/tile-meta";
+
+// Direction → fractional offsets (fractions of tile size)
+const DIRECTION_OFFSETS: Record<FloatingDirection, { offsetX: number; offsetY: number }> = {
+  "none": { offsetX: 0, offsetY: 0 },
+  "top": { offsetX: 0, offsetY: -0.5 },
+  "bottom": { offsetX: 0, offsetY: 0.5 },
+  "left": { offsetX: -0.5, offsetY: 0 },
+  "right": { offsetX: 0.5, offsetY: 0 },
+  "top-left": { offsetX: -0.25, offsetY: -0.5 },
+  "top-right": { offsetX: 0.25, offsetY: -0.5 },
+  "bottom-left": { offsetX: -0.25, offsetY: 0.5 },
+  "bottom-right": { offsetX: 0.25, offsetY: 0.5 },
+};
+
 /**
  * Computes virtual grid dimensions for each layer in a layout
  * Analyzes all tile positions to determine the maximum rows and columns needed per layer
@@ -71,12 +86,14 @@ export function computeGridPosition(
     col: backendPos.col,                  // ✅ backend col
     gridRow: backendPos.row + 1,
     gridColumn: backendPos.col + 1,
-    // Adding fractional positioning for floating tiles
-    gridRowFractional: backendPos.floating 
-      ? `${backendPos.row + 1.5} / ${backendPos.row + 2.5}` // Makes it in-between rows.
-      : undefined,
+    // We avoid using fractional grid line numbers (invalid in CSS Grid).
+    // Instead, always place by the nearest integer grid row and use numeric
+    // `offsetY`/`offsetX` to nudge floating tiles between rows.
+    gridRowFractional: undefined,
     layer: backendPos.layer,
-    //offsetY: backendPos.floating ? 0.5 : 0, // ✅ fractional offset for floating tiles
-    floating: backendPos.floating
+    floating: backendPos.floating,
+    // Derive numeric fractional offsets from direction mapping (defaults to 0)
+    offsetX: DIRECTION_OFFSETS[(backendPos.floating ?? 'none') as FloatingDirection].offsetX,
+    offsetY: DIRECTION_OFFSETS[(backendPos.floating ?? 'none') as FloatingDirection].offsetY,
   };
 }

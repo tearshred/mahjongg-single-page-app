@@ -4,7 +4,7 @@ import { describe, it, expect } from "vitest";
 
 // Import the hook we're testing and its type definition
 import { useMahjonggTileData } from "../hooks/useMahjonggTileData";
-import type { TileSymbol } from "../types/TileProps";
+import type { TileSymbol } from "../types/tile-meta";
 
 describe("useMahjonggTileData", () => {
   // Main test case that verifies the hook's output structure

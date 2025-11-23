@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import type { TileSize } from "../types/TileState";
+import { useState, useRef, useLayoutEffect } from "react";
+import type { TileSize } from "../types/tile-meta";
 
 /**
  * Custom hook to dynamically measure the size of a tile element.
@@ -20,10 +20,9 @@ export function useTileSize(): {
   // Store tile size
   const [tileSize, setTileSize] = useState<TileSize>({ width: 0, height: 0 });
 
-  useEffect(() => {
-    // Only measure if the ref is attached to an element
+  useLayoutEffect(() => {
+    // Synchronously measure before paint to avoid layout jank
     if (tileRef.current) {
-      // getBoundingClientRect returns the element's width and height
       const rect = tileRef.current.getBoundingClientRect();
       setTileSize({ width: rect.width, height: rect.height });
     }

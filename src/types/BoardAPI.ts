@@ -1,4 +1,4 @@
-import type { TileDataWithState } from "./TileState";
+import type { TileDataWithState } from "./tile-meta";
 
 /**
  * The API returned by the useMahjonggBoard hook.

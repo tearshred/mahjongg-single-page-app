@@ -21,9 +21,8 @@
  */
 
 /**
- * Import React because JSX is used for the dummy component.
+ * Note: No explicit React import required; this module doesn't use JSX directly.
  */
-import React from "react";
 
 // Stires the latest value of the hook being testecd
 // `any` keeps it flexible for hooks returning different types

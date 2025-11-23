@@ -1,4 +1,5 @@
 import type { FC, SVGProps } from "react";
+import type { FloatingDirection } from "./shared";
 
 // SVG Component Types
 // This creates a type for an object where:
@@ -32,6 +33,10 @@ export interface TileProps {
   isSelected?: boolean; // For highlighting selected tiles
   onClick?: (e: React.MouseEvent<HTMLElement | SVGSVGElement>) => void;
   onSelect?: () => void; // A void function that does not return anything. It's just an action
+  // UI may optionally accept floating / offsets from the domain model
+  floating?: FloatingDirection;
+  offsetX?: number; // optional fractional offset (-0.5 => left 50%)
+  offsetY?: number;
 }
 
 // Props passed to the visual part

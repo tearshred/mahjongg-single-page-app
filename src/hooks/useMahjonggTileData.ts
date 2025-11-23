@@ -1,7 +1,7 @@
 // See hooks-explained.md for more detailed explanation
 
 import { useMemo } from "react";
-import type { TileSymbol, TileSymbols } from "../types/TileProps";
+import type { TileSymbol, TileSymbols } from "../types/tile-meta";
 import { loadTileSymbols } from "../utils/tileSymbolLoader";
 
 export function useMahjonggTileData(): TileSymbol[] {

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { loadTileSymbols } from "../utils/tileSymbolLoader";
-import type { SVGComponent } from "../types/TileProps";
+import type { SVGComponent } from "../types/tile-meta";
 
 const preloadedSymbols = loadTileSymbols();
 

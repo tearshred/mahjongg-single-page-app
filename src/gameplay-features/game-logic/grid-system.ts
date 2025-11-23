@@ -1,4 +1,5 @@
-import type { GridCell, GridLayer, Grid3D, GridTilePosition } from '../../types/game-logic';
+import type { GridLayer, Grid3D, GridTilePosition } from '../../types/game-logic';
+import type { FloatingDirection } from '../../types/tile-meta';
 
 // Standard grid dimensions (can be customized per layout)
 // This is a constant object that stores the default size of our 3D grid
@@ -40,7 +41,7 @@ export function create3DGrid(layers: number, rows: number, cols: number): Grid3D
 // Returns: A new GridLayer with the specified positions marked as 'tile' or 'floating'
 export function markTilesInLayer(
   layer: GridLayer,
-  positions: { row: number; col: number; floating?: boolean }[]
+  positions: { row: number; col: number; floating?: boolean | FloatingDirection }[]
 ): GridLayer {
   // Deep copy: Create a copy of the layer to avoid modifying the original
   // layer.map(row => [...row]) means:
@@ -59,9 +60,12 @@ export function markTilesInLayer(
     // col >= 0: column is not negative
     // col < newLayer[0].length: column doesn't exceed the number of columns (0-14)
     if (row >= 0 && row < newLayer.length && col >= 0 && col < newLayer[0].length) {
-      // Set this specific cell to 'floating' if floating flag is true, otherwise 'tile'
-      // newLayer[row][col] accesses: layer at index [row], then column at index [col]
-      newLayer[row][col] = floating ? 'floating' : 'tile';
+      // Store the floating direction string if provided, otherwise mark as 'floating' (legacy)
+      if (floating) {
+        newLayer[row][col] = typeof floating === 'string' ? floating : 'top';
+      } else {
+        newLayer[row][col] = 'tile';
+      }
     }
   });
   
@@ -93,12 +97,28 @@ export function extractTilePositions(grid: Grid3D): GridTilePosition[] {
         // Check if this cell has a tile (is 'tile' or 'floating', not 'empty')
         if (cellValue !== 'empty') {
           // Add this tile's position to our array
-          // positions.push() adds a new object to the end of the array
+          // Determine floating direction (if any). If the grid cell stores a direction
+          // string we preserve it. If it contains the legacy 'floating' marker we
+          // map it to a default direction ('top'). If it's 'tile' we omit floating.
+          // Normalize cellValue to a string for safe runtime checks (covers legacy markers)
+          const cellStr = String(cellValue);
+          let floating: FloatingDirection | undefined;
+          if (cellStr === 'tile') {
+            floating = undefined;
+          } else if (cellStr === 'floating') {
+            // Legacy marker: map to a sensible default
+            floating = 'top';
+          } else if (cellStr !== 'empty') {
+            floating = cellStr as FloatingDirection;
+          } else {
+            floating = undefined;
+          }
+
           positions.push({
-            layer: layerIndex,      // Which layer we're on
-            row: rowIndex,          // Which row we're on
-            col: colIndex,          // Which column we're on
-            floating: cellValue === 'floating'  // True if this is a floating tile
+            layer: layerIndex,
+            row: rowIndex,
+            col: colIndex,
+            floating,
           });
         }
       });

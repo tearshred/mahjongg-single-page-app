@@ -1,15 +1,13 @@
 // Import necessary functions and types
-import type { TileDesignProps, TileSymbol } from "../types/TileProps"; // Import our custom type definitions
-import { useMemo } from "react"; // React hook for memoization (performance optimization)
+import type { TileDesignProps } from "../types/tile-meta"; // Import our custom type definitions
 import { useMahjonggTileDesign } from "../hooks/useMahjonggTileDesign";
 
 const TileDesign = ({
   name,
   className,
   onClick,
-  isSelected,
 }: TileDesignProps) => {
-  // "Take the object returned by useMahjonggTileDesign(), look for a property on it called getTileDesign, and create a new variable with that same name containing its value."
+  // "Take the object returned by useMahj property on it called getTileDesign, and create a new variable with that same namonggTileDesign(), look for ae containing its value."
   const { getTileDesign } = useMahjonggTileDesign();
 
   const SymbolComponent = getTileDesign(name);

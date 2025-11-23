@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import assignTilePositions from "../gameplay-features/game-logic/board-builder";
-import type { TileDataWithState } from "../types/TileState";
+import type { TileDataWithState } from "../types/tile-meta";
 import type { GridPosition } from "../types/BoardLayouts";
 
 describe("Board Builder - Layer 0 Tests", () => {

@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import Tile from "./Tile";
 import { useMahjonggBoard } from "../hooks/useMahjonggBoard";
-import { filterLayer } from "../utils/boardHelper";
 import { useTileSize } from "../hooks/useTileSize";
 import { useLayoutConfig } from "../hooks/useLayoutConfig";
 
@@ -75,10 +74,9 @@ const Board = () => {
               key={`${tile.name}-${tile.position.layer}-${tile.position.row}-${tile.position.col}`}
               ref={tile.position.row === 0 && tile.position.col === 0 ? tileRef : undefined}
               className="transition-all duration-200 ease-in-out"
-              style={{
-                gridRow: tile.position.gridRow,
+                style={{
+                gridRow: tile.position.gridRowFractional ?? tile.position.gridRow,
                 gridColumn: tile.position.gridColumn,
-                transform: tile.position.floating ? 'translateY(-50%)' : 'none',
                 zIndex: tile.position.layer,
               }}
             >
@@ -86,6 +84,9 @@ const Board = () => {
                 name={tile.name}
                 isSelected={tile.isSelected}
                 onSelect={() => selectTile(tile)}
+                floating={tile.position.floating}
+                offsetX={tile.position.offsetX}
+                offsetY={tile.position.offsetY}
               />
             </div>
           ))}

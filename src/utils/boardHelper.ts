@@ -1,4 +1,4 @@
-import type { TileDataWithState } from "../types/TileState";
+import type { TileDataWithState } from "../types/tile-meta";
 import type { LayoutPosition } from "../types/BoardLayouts";
 
 /** Filter tiles by layer */

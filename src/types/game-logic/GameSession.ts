@@ -1,4 +1,4 @@
-import type { TileDataWithState } from "../TileState";
+import type { TileDataWithState } from "../tile-meta";
 
 /**
  * Represents a successful match that occurred during gameplay.

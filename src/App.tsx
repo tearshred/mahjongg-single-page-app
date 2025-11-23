@@ -1,5 +1,6 @@
 import "./App.css";
 import Board from "./components/Board";
+import Tile3DTest from "./components/Tile3DTest";
 
 function App() {
   return (
@@ -13,8 +14,9 @@ function App() {
     // but I promise I won’t put any wrapper tag in the HTML.”
 
     <>
-      <div>Mahjong v1</div>
-      <Board />
+      {/* <div>Mahjong v1</div> */}
+      {/* <Board /> */}
+      <Tile3DTest />
     </>
   );
 }
