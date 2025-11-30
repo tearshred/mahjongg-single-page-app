@@ -15,8 +15,8 @@ function App() {
 
     <>
       {/* <div>Mahjong v1</div> */}
-      {/* <Board /> */}
-      <Tile3DTest />
+      <Board />
+      {/* <Tile3DTest /> */}
     </>
   );
 }

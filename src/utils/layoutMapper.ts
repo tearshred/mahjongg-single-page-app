@@ -13,10 +13,10 @@ const DIRECTION_OFFSETS: Record<FloatingDirection, { offsetX: number; offsetY: n
   "bottom": { offsetX: 0, offsetY: 0.5 },
   "left": { offsetX: -0.5, offsetY: 0 },
   "right": { offsetX: 0.5, offsetY: 0 },
-  "top-left": { offsetX: -0.25, offsetY: -0.5 },
-  "top-right": { offsetX: 0.25, offsetY: -0.5 },
-  "bottom-left": { offsetX: -0.25, offsetY: 0.5 },
-  "bottom-right": { offsetX: 0.25, offsetY: 0.5 },
+  "top-left": { offsetX: -0.5, offsetY: -0.5 },
+  "top-right": { offsetX: 0.5, offsetY: -0.5 },
+  "bottom-left": { offsetX: -0.5, offsetY: 0.5 },
+  "bottom-right": { offsetX: 0.5, offsetY: 0.5 },
 };
 
 /**

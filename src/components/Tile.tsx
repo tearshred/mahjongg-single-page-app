@@ -60,15 +60,15 @@ const Tile = ({
       ref={tileRef}
       onClick={tileClickHandler}
       style={transformStyle}
-      className={`relative block w-[112px] h-[150px] cursor-pointer tile-3d tile-3d-corner ${
+      className={`relative block w-[120px] h-[158px] cursor-pointer ${
         isSelected ? "ring-4 ring-red-500" : ""
       }`}
     >
-      <TileBaseRect className="block w-full h-full tile-base-border" />
+      <TileBaseRect className="block w-full h-full" />
       <TileDesign
         name={name}
         isSelected={isSelected}
-        className="absolute inset-0 p-3 w-full h-full pointer-events-none"
+        className="absolute top-0 left-[8px] w-[112px] h-[150px] p-3 pointer-events-none"
       />
     </div>
   );
