@@ -44,6 +44,8 @@ const Tile = ({
     });
   }
 
+  // Testing new commits 
+
   return (
     // This wrapper div serves three crucial purposes:
     // 1. **Click Containment:** It creates a fixed-size clickable area (w-30 h-auto).
