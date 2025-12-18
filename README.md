@@ -1,69 +1,95 @@
-# React + TypeScript + Vite
+# Mahjong Single Page Application
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern implementation of the classic Mahjong Solitaire game built with React, TypeScript, and Vite.
 
-Currently, two official plugins are available:
+## Project Structure
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+src/
+├── components/         # React components
+│   ├── Board.tsx      # Main game board
+│   ├── Tile.tsx       # Individual tile component
+│   └── ...
+├── gameplay-features/ # Core game logic
+│   ├── game-logic/    # Game mechanics
+│   │   ├── board-builder.ts
+│   │   └── layout-builder.ts
+│   └── layouts/       # Board layouts
+│       └── turtle-layout.ts
+├── hooks/            # Custom React hooks
+├── types/            # TypeScript type definitions
+└── utils/            # Utility functions
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Grid System
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+The game uses a sophisticated grid system for tile placement:
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- Grid Range: 0-14 (15 columns total)
+- Regular Tiles: Positions 1-12 (centered)
+- Floating Tiles:
+  - Position 0: Left floating tile
+  - Positions 13-14: Right floating tiles
+
+### Layout Structure
+
+Each row in the layout is defined by:
+- Number of regular tiles (centered in positions 1-12)
+- Optional floating tiles:
+  - Left position (0)
+  - Right positions (13-14)
+
+## Development
+
+### Prerequisites
+
+- Node.js (version 16 or higher)
+- pnpm (preferred package manager)
+
+### Setup
+
+1. Clone the repository
+```bash
+git clone [repository-url]
+cd mahjongg-single-page-app
+```
+
+2. Install dependencies
+```bash
+pnpm install
+```
+
+3. Start development server
+```bash
+pnpm dev
+```
+
+## Technical Implementation
+
+### Key Features
+
+- Type-safe layout generation
+- Automatic tile centering
+- CSS Grid-based positioning
+- React hooks for state management
+- Custom coordinate system for tile placement
+
+### Core Components
+
+- **Board**: Main game container with CSS Grid layout
+- **Tile**: Individual Mahjong tile with click handling
+- **Layout Builder**: Generates tile positions and handles centering
+- **Board Builder**: Converts layouts to grid positions
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
 ```

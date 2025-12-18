@@ -1,49 +1,97 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Tile from "./Tile";
-
-type TileType = {
-  id: string;
-  number: number;
-};
+import { useMahjonggBoard } from "../hooks/useMahjonggBoard";
+import { useTileSize } from "../hooks/useTileSize";
+import { useLayoutConfig } from "../hooks/useLayoutConfig";
 
 const Board = () => {
-  //   const createTiles = (): TileType[] => {
-  //     // Create an array of 5 unique tile objects with IDs and numbers
-  //     // Array.from({ length: 5 }) creates an array with 5 undefined elements
-  //     const baseTiles = Array.from({ length: 5 }, (_, i) => ({
-  //       id: `tile_${i + 1}_a`, // 'tile_1_a', 'tile_2_a', etc.
-  //       number: i + 1, // tile number 1 through 5
-  //     }));
-  //     // Create duplicates of the base tiles
-  //     // We map over baseTiles and create a new tile object for each one
-  //     // The duplicate tile has an id with '_a' replaced by '_b' to keep IDs unique
-  //     // The number stays the same because duplicates have the same value
-  //     const duplicates = baseTiles.map((t) => ({
-  //       id: t.id.replace("_a", "_b"), // e.g. 'tile_1_b'
-  //       number: t.number,
-  //     }));
-  //     // Return a new array that combines baseTiles and duplicates using spread syntax
-  //     // This gives a total of 10 tiles: 5 unique + 5 duplicates
-  //     return [...baseTiles, ...duplicates];
-  //   };
+  const { boardTiles, selectedTile, deselectAllTiles, selectTile } =
+    useMahjonggBoard();
+  const { gridDimensions } = useLayoutConfig(); // Get dynamic dimensions
+  
+  const { tileRef } = useTileSize();
+  
+  // Dynamic dimensions
+  const maxCol = gridDimensions.columns;
+  const maxRow = gridDimensions.rows;
 
-  //   // React state to hold the tiles array
-  //   // useState<Tile[]> initializes state with the array returned by createTiles()
-  //   // We destructure to get 'tiles' as the current state value
-  //   // We don’t need the setter function here yet, so only 'tiles' is used
-  //   const [tiles] = useState<TileType[]>(createTiles());
+  // Layer visibility state for debugging
+  const [visibleLayers, setVisibleLayers] = useState([true, true, true, true, true]);
 
-  const [clickedTile, setClickedTile] = useState("No tile clicked yet");
-
-  const handleTileClick = () => {
-    setClickedTile("Tile clicked");
-    console.log("Tile Clicked")
-  };
+  // Filter tiles based on visible layers
+  const visibleTiles = useMemo(() => 
+    boardTiles.filter(tile => visibleLayers[tile.position.layer]), 
+    [boardTiles, visibleLayers]
+  );
 
   return (
-    <div>
-      <h1>{clickedTile}</h1>
-      <Tile onClick={handleTileClick} />
+    <div id="main-board" className="w-screen h-screen relative">
+      <div className="absolute inset-0" onClick={deselectAllTiles}></div>
+
+      <div className="w-screen flex justify-center items-center">
+        <h1>{selectedTile ? `${selectedTile.name} at (layer ${selectedTile.position.layer}, row ${selectedTile.position.row}, column ${selectedTile.position.col})` : "No tile selected"}</h1>
+      </div>
+
+      {/* Layer visibility controls (temporary for debugging) */}
+      <div className="absolute text-2xl top-8 left-4 p-2 rounded shadow z-50 flex gap-2">
+        {[0, 1, 2, 3, 4].map(layer => (
+          <label key={layer} className="flex items-center gap-1">
+            <input
+              type="checkbox"
+              checked={visibleLayers[layer]}
+              onChange={() => setVisibleLayers(prev => 
+                prev.map((visible, i) => i === layer ? !visible : visible)
+              )}
+            />
+            Layer {layer}
+          </label>
+        ))} 
+      </div>
+
+      {/* No visible layers message */}
+{visibleTiles.length === 0 && (
+  <div className="flex items-center justify-center text-4xl bg-opacity-75 z-50">
+    No visible layers
+  </div>
+)}
+
+      {/* Center the grid container */}
+      <div className="w-full h-screen flex justify-center items-center">
+        <div
+          className="inline-grid relative z-10 perspective-1000"
+          style={{
+            gridTemplateColumns: `repeat(${maxCol}, minmax(min-content, max-content))`,
+            gridTemplateRows: `repeat(${maxRow}, minmax(min-content, max-content))`,
+            gap: 0,
+            justifyItems: 'center', // Center items horizontally in their grid cells
+            alignItems: 'center',   // Center items vertically in their grid cells
+            transformStyle: 'preserve-3d' // Preserve 3D positioning
+          }}
+        >
+          {visibleTiles.map((tile) => (
+            <div
+            // Unique key including layer to prevent React reusing DOM elements for same tile across layers
+              key={`${tile.name}-${tile.position.layer}-${tile.position.row}-${tile.position.col}`}
+              ref={tile.position.row === 0 && tile.position.col === 0 ? tileRef : undefined}
+              className="transition-all duration-200 ease-in-out"
+                style={{
+                gridRow: tile.position.gridRowFractional ?? tile.position.gridRow,
+                gridColumn: tile.position.gridColumn,
+                zIndex: tile.position.layer,
+              }}
+            >
+              <Tile
+                name={tile.name}
+                isSelected={tile.isSelected}
+                onSelect={() => selectTile(tile)}
+                floating={tile.position.floating}
+                offsetX={tile.position.offsetX}
+                offsetY={tile.position.offsetY}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
