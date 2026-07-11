@@ -49,6 +49,9 @@ export default function assignTilePositions(tiles: TileDataWithState[]): TileDat
                     isSelected: false,
                     isHighlighted: false,
                     isClicked: false,
+                    isPlayable: false,
+                    isMatchCandidate: false,
+                    isMatched: false,
                     value: tile.name,
                     floating: position.floating ?? 'none'
                 });
