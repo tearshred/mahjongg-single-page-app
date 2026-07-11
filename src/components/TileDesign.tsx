@@ -12,9 +12,17 @@ const TileDesign = ({
 
   const SymbolComponent = getTileDesign(name);
 
-  // Safety check
-  if (!SymbolComponent) {
-    return null;
+  // Bug fix 3: Prevent empty tiles - always render a valid symbol or fallback
+  if (!SymbolComponent || !name || name.trim() === "") {
+    console.warn(`Invalid tile symbol: "${name}" - rendering fallback`);
+    return (
+      <div
+        className={`${className} flex items-center justify-center bg-red-100 text-red-600 text-xs font-bold border-2 border-red-400`}
+        onClick={onClick}
+      >
+        ?
+      </div>
+    );
   }
 
   return <SymbolComponent className={className} onClick={onClick} />;

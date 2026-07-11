@@ -7,6 +7,9 @@ export interface TileDataWithState extends TileSymbol {
   isSelected: boolean;
   isClicked: boolean;
   isHighlighted: boolean;
+  isPlayable: boolean;
+  isMatchCandidate: boolean;
+  isMatched: boolean;
   floating?: FloatingDirection;
   value: string | number;
   position: GridPosition;

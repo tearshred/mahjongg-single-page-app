@@ -1,77 +1,77 @@
-import TileDesign from "./TileDesign";
-import TileBaseRect from "../assets/shared/TileBaseRect.svg?react";
-import { useTileSize } from "../hooks/useTileSize";
-import type { TileProps } from "../types/tile-meta";
+import type { ReactNode } from "react";
+import { TILE_HEIGHT, TILE_LAYER_OFFSET_X, TILE_LAYER_OFFSET_Y, TILE_WIDTH } from "../utils/tilePlacement";
 
-// The Tile component now accepts optional floating/offset props and
-// computes pixel transforms using the measured tile size for pixel-perfect
-// alignment of floating tiles.
-const Tile = ({
-  name,
+interface MahjongTileProps {
+  layer: number;
+  row: number;
+  column: number;
+  isSelected?: boolean;
+  isPlayable?: boolean;
+  offsetX?: number;
+  offsetY?: number;
+  onSelect?: () => void;
+  children?: ReactNode;
+}
+
+const SVG_WIDTH = 74;
+const SVG_HEIGHT = 98;
+
+export const MahjongTile = ({
+  layer,
+  row,
+  column,
+  isSelected = false,
+  isPlayable = true,
+  offsetX = 0,
+  offsetY = 0,
   onSelect,
-  isSelected,
-  floating: _floating,
-  offsetX,
-  offsetY,
-}: TileProps) => {
-  // Handler for the click event
-  const tileClickHandler = (e: React.MouseEvent<HTMLElement>) => {
-    e.stopPropagation(); // Still need to stop propagation
-    if (onSelect) {
-      // Call the onSelect function provided by the parent (Board.tsx)
-      // `.?` - optional chaining operator, meaning parent might not always pass the prop
-      onSelect?.();
-    }
-  };
-
-  // Measure this tile so we can convert fractional offsets into pixels
-  const { tileRef, tileSize } = useTileSize();
-  const translateX = (offsetX ?? 0) * (tileSize.width || 0);
-  const translateY = (offsetY ?? 0) * (tileSize.height || 0);
-  const transformStyle = {
-    transform: `translate(${translateX}px, ${translateY}px)`,
-  };
-
-  // Debugging: log offsets/computed pixels for floating tiles
-  if ((offsetX ?? 0) !== 0 || (offsetY ?? 0) !== 0) {
-    // eslint-disable-next-line no-console
-    console.debug(`Tile:${name} offsets:`, {
-      offsetX,
-      offsetY,
-      tileSize,
-      translateX,
-      translateY,
-    });
-  }
+  children,
+}: MahjongTileProps) => {
+  const zIndex = layer * 1000 + row * 10 + column;
+  const top = row * TILE_HEIGHT - layer * TILE_LAYER_OFFSET_Y + offsetY * TILE_HEIGHT;
+  const left = column * TILE_WIDTH - layer * TILE_LAYER_OFFSET_X + offsetX * TILE_WIDTH;
 
   return (
-    // This wrapper div serves three crucial purposes:
-    // 1. **Click Containment:** It creates a fixed-size clickable area (w-30 h-auto).
-    //    The cursor pointer will ONLY appear within this box, preventing it from
-    //    appearing on the empty space around the SVG caused by absolute positioning.
-    // 2. **Positioning Context:** The 'relative' class creates a anchor point for the
-    //    absolutely positioned TileDesign (the symbol) inside, ensuring it aligns
-    //    perfectly with the TileBase underneath.
-    // 3. **Event Delegation:** It handles the click event at the parent level. This
-    //    is more reliable than attaching the event to the SVGs themselves, as it
-    //    captures all clicks within the tile's boundaries and avoids issues with
-    //    transparent parts of the SVG or pointer-events.
     <div
-      ref={tileRef}
-      onClick={tileClickHandler}
-      style={transformStyle}
-      className={`relative block w-[120px] h-[158px] cursor-pointer ${
-        isSelected ? "ring-4 ring-red-500" : ""
-      }`}
+      className="absolute transition-all duration-200"
+      style={{
+        zIndex,
+        top,
+        left,
+        width: SVG_WIDTH,
+        height: SVG_HEIGHT,
+        cursor: isPlayable ? "pointer" : "not-allowed",
+        filter: isPlayable ? "none" : "brightness(0.75)",
+      }}
+      onClick={(event) => {
+        event.stopPropagation();
+        if (isPlayable) {
+          onSelect?.();
+        }
+      }}
     >
-      <TileBaseRect className="block w-full h-full" />
-      <TileDesign
-        name={name}
-        isSelected={isSelected}
-        className="absolute top-0 left-[8px] w-[112px] h-[150px] p-3 pointer-events-none"
-      />
+      <svg width="74" height="98" viewBox="0 0 74 98" className="overflow-visible">
+        <rect x="8" y="14" width="60" height="76" rx="4" fill="rgba(0,0,0,0.25)" />
+        <polygon points="68,6 74,12 74,88 68,82" fill="#0A3F20" />
+        <polygon points="8,82 14,88 74,88 68,82" fill="#0F5132" />
+        <rect
+          x="8"
+          y="6"
+          width="60"
+          height="76"
+          rx="3"
+          fill={isSelected ? "#FFFBEA" : "#F4EAD4"}
+          stroke={isSelected ? "#D97706" : "#C5B696"}
+          strokeWidth={isSelected ? "2" : "1"}
+        />
+        <foreignObject x="12" y="10" width="52" height="68">
+          <div className="flex h-full w-full items-center justify-center pointer-events-none select-none">
+            {children ?? <span className="text-xs text-gray-400">Empty</span>}
+          </div>
+        </foreignObject>
+      </svg>
     </div>
   );
 };
 
-export default Tile;
+export default MahjongTile;

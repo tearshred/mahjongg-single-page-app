@@ -14,6 +14,9 @@ describe("Board Builder - Layer 0 Tests", () => {
             isSelected: false,
             isHighlighted: false,
             isClicked: false,
+            isPlayable: false,
+            isMatchCandidate: false,
+            isMatched: false,
             path: `/mock/tile${i}.svg`,
             Component: () => null
         }));

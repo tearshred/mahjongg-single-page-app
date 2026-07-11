@@ -31,8 +31,12 @@ export interface TileSymbols {
 export interface TileProps {
   name: string; // Changed from generatedTile for consistency
   isSelected?: boolean; // For highlighting selected tiles
+  isPlayable?: boolean;
+  isMatchCandidate?: boolean;
+  isMatched?: boolean;
   onClick?: (e: React.MouseEvent<HTMLElement | SVGSVGElement>) => void;
   onSelect?: () => void; // A void function that does not return anything. It's just an action
+  layer?: number;
   // UI may optionally accept floating / offsets from the domain model
   floating?: FloatingDirection;
   offsetX?: number; // optional fractional offset (-0.5 => left 50%)

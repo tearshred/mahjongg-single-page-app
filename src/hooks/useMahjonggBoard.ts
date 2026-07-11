@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMahjonggTileData } from "./useMahjonggTileData";
 import type { TileDataWithState } from "../types/tile-meta";
 import type { MahjonggBoardAPI } from "../types/BoardAPI";
@@ -9,6 +9,57 @@ import {
 } from "../utils/layoutMapper";
 import { assignRandomTiles } from "../utils/tileRandomizer"; // ✅ added
 import { isExactTile } from "../utils/tileUtils";
+import { areTilesMatch, isTileFree } from "../gameplay-features/game-logic/tile-rules";
+
+const MATCHED_TILE_DISPLAY_MS = 320;
+
+function getTileKey(tile: TileDataWithState): string {
+  return `${tile.position.layer}-${tile.position.row}-${tile.position.col}`;
+}
+
+function deriveBoardState(
+  tiles: TileDataWithState[],
+  selectedKey: string | null
+): TileDataWithState[] {
+  const activeTiles = tiles.filter((tile) => !tile.isMatched);
+  const playableKeys = new Set(
+    activeTiles
+      .filter((tile) => isTileFree(tile, activeTiles))
+      .map((tile) => getTileKey(tile))
+  );
+  const selectedTile = selectedKey
+    ? activeTiles.find((tile) => getTileKey(tile) === selectedKey && playableKeys.has(selectedKey)) ?? null
+    : null;
+
+  return tiles.map((tile) => {
+    if (tile.isMatched) {
+      return {
+        ...tile,
+        isSelected: false,
+        isHighlighted: false,
+        isPlayable: false,
+        isMatchCandidate: false,
+      };
+    }
+
+    const tileKey = getTileKey(tile);
+    const isPlayable = playableKeys.has(tileKey);
+    const isSelected = selectedTile ? tileKey === getTileKey(selectedTile) : false;
+    const isMatchCandidate =
+      !!selectedTile &&
+      tileKey !== getTileKey(selectedTile) &&
+      isPlayable &&
+      areTilesMatch(selectedTile, tile);
+
+    return {
+      ...tile,
+      isSelected,
+      isHighlighted: isPlayable,
+      isPlayable,
+      isMatchCandidate,
+    };
+  });
+}
 
 // Tells TypeScript: "This function promises to return an object that
 // matches the MahjonggBoardAPI structure."
@@ -49,29 +100,78 @@ export function useMahjonggBoard(): MahjonggBoardAPI {
   }, [positions, tileData, virtualGrids]);
 
   // 5. React state for board tiles
-  const [boardTiles, setBoardTiles] =
-    useState<TileDataWithState[]>(initialTiles);
+  const [boardTiles, setBoardTiles] = useState<TileDataWithState[]>(() =>
+    deriveBoardState(initialTiles, null)
+  );
+  const matchedRemovalTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (matchedRemovalTimeoutRef.current !== null) {
+        window.clearTimeout(matchedRemovalTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const scheduleMatchedTileRemoval = () => {
+    if (matchedRemovalTimeoutRef.current !== null) {
+      window.clearTimeout(matchedRemovalTimeoutRef.current);
+    }
+
+    matchedRemovalTimeoutRef.current = window.setTimeout(() => {
+      setBoardTiles((prev) => deriveBoardState(prev.filter((tile) => !tile.isMatched), null));
+      matchedRemovalTimeoutRef.current = null;
+    }, MATCHED_TILE_DISPLAY_MS);
+  };
 
   // 6️⃣ Selection API
   const selectTile = (clickedTile: TileDataWithState) => {
-    setBoardTiles((prev) =>
-      prev.map((tile) => {
-      if (isExactTile(clickedTile, tile)) {
-        return {
-          ...tile,
-          isSelected: !tile.isSelected,
-          isHighlighted: true,  // Add highlighting here
-        };
+    const clickedKey = getTileKey(clickedTile);
+    let shouldRemoveMatchedTiles = false;
+
+    setBoardTiles((prev) => {
+      const nextClickedTile = prev.find((tile) => getTileKey(tile) === clickedKey);
+
+      if (!nextClickedTile || nextClickedTile.isMatched || !nextClickedTile.isPlayable) {
+        return prev;
       }
-      return tile;
-    })
-    );
+
+      const selectedTile = prev.find((tile) => tile.isSelected && !tile.isMatched) ?? null;
+
+      if (!selectedTile) {
+        return deriveBoardState(prev, clickedKey);
+      }
+
+      if (isExactTile(selectedTile, nextClickedTile)) {
+        return deriveBoardState(prev, null);
+      }
+
+      if (areTilesMatch(selectedTile, nextClickedTile)) {
+        shouldRemoveMatchedTiles = true;
+        const matchedBoard = prev.map((tile) => {
+          if (isExactTile(tile, selectedTile) || isExactTile(tile, nextClickedTile)) {
+            return {
+              ...tile,
+              isMatched: true,
+            };
+          }
+
+          return tile;
+        });
+
+        return deriveBoardState(matchedBoard, null);
+      }
+
+      return deriveBoardState(prev, clickedKey);
+    });
+
+    if (shouldRemoveMatchedTiles) {
+      scheduleMatchedTileRemoval();
+    }
   };
 
   const deselectAllTiles = () => {
-    setBoardTiles((prev) =>
-      prev.map((tile) => ({ ...tile, isSelected: false }))
-    );
+    setBoardTiles((prev) => deriveBoardState(prev, null));
   };
 
   const selectedTile =
