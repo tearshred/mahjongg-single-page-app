@@ -35,6 +35,6 @@ export function getTilePlacement(position: Pick<GridPosition, "row" | "col" | "l
     bottom: top + TILE_HEIGHT,
     width: TILE_WIDTH,
     height: TILE_HEIGHT,
-    zIndex: position.layer * 1000 + position.row * 10 + position.col,
+    zIndex: position.layer * 1000 + position.col * 100 + position.row * 10,
   };
 }

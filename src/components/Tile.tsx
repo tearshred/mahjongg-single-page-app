@@ -27,7 +27,7 @@ export const MahjongTile = ({
   onSelect,
   children,
 }: MahjongTileProps) => {
-  const zIndex = layer * 1000 + row * 10 + column;
+  const zIndex = layer * 1000 + column * 100 + row * 10;
   const top = row * TILE_HEIGHT - layer * TILE_LAYER_OFFSET_Y + offsetY * TILE_HEIGHT;
   const left = column * TILE_WIDTH - layer * TILE_LAYER_OFFSET_X + offsetX * TILE_WIDTH;
 
@@ -64,12 +64,12 @@ export const MahjongTile = ({
           stroke={isSelected ? "#D97706" : "#C5B696"}
           strokeWidth={isSelected ? "2" : "1"}
         />
-        <foreignObject x="12" y="10" width="52" height="68">
-          <div className="flex h-full w-full items-center justify-center pointer-events-none select-none">
-            {children ?? <span className="text-xs text-gray-400">Empty</span>}
-          </div>
-        </foreignObject>
       </svg>
+      <div
+        className="pointer-events-none absolute left-[12px] top-[10px] flex h-[68px] w-[52px] items-center justify-center select-none"
+      >
+        {children ?? <span className="text-xs text-gray-400">Empty</span>}
+      </div>
     </div>
   );
 };

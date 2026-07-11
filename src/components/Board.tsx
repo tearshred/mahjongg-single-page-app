@@ -1,8 +1,9 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import MahjongTile from "./Tile";
 import { useMahjonggBoard } from "../hooks/useMahjonggBoard";
 import { useMahjonggTileDesign } from "../hooks/useMahjonggTileDesign";
 import { useLayoutConfig } from "../hooks/useLayoutConfig";
+import { areTilesMatch } from "../gameplay-features/game-logic/tile-rules";
 import {
   TILE_HEIGHT,
   TILE_HORIZONTAL_STEP,
@@ -47,10 +48,88 @@ const Board = () => {
   }, [maxLayer]);
 
   // Filter tiles based on visible layers
-  const visibleTiles = useMemo(() => 
-    boardTiles.filter(tile => visibleLayers[tile.position.layer] ?? true), 
+  const visibleTiles = useMemo(
+    () =>
+      boardTiles.filter(
+        (tile) => !tile.isMatched && (visibleLayers[tile.position.layer] ?? true)
+      ),
     [boardTiles, visibleLayers]
   );
+
+  const matchedTileCount = useMemo(
+    () => boardTiles.filter((tile) => tile.isMatched).length,
+    [boardTiles]
+  );
+  const activeTileCount = boardTiles.length - matchedTileCount;
+
+  const availableTileCount = useMemo(
+    () => boardTiles.filter((tile) => !tile.isMatched && tile.isPlayable).length,
+    [boardTiles]
+  );
+
+  const unavailableTileCount = useMemo(
+    () => boardTiles.filter((tile) => !tile.isMatched && !tile.isPlayable).length,
+    [boardTiles]
+  );
+
+  const availableMoves = useMemo(() => {
+    const availableTiles = boardTiles.filter((tile) => !tile.isMatched && tile.isPlayable);
+    let moves = 0;
+
+    for (let i = 0; i < availableTiles.length; i += 1) {
+      for (let j = i + 1; j < availableTiles.length; j += 1) {
+        if (areTilesMatch(availableTiles[i], availableTiles[j])) {
+          moves += 1;
+        }
+      }
+    }
+
+    return moves;
+  }, [boardTiles]);
+
+  const completionPercent = useMemo(() => {
+    if (boardTiles.length === 0) {
+      return 0;
+    }
+
+    return Math.round((matchedTileCount / boardTiles.length) * 100);
+  }, [boardTiles.length, matchedTileCount]);
+
+  const isDeadlock = availableTileCount > 0 && availableMoves === 0;
+  const isClear = activeTileCount === 0;
+  const solvabilityLabel = isClear ? "CLEAR" : isDeadlock ? "DEADLOCK" : "PLAYABLE";
+  const completionLabel = isClear
+    ? "COMPLETE"
+    : `${activeTileCount} ACTIVE / ${matchedTileCount} MATCHED`;
+
+  const unresolvedTileNames = useMemo(() => {
+    const missing = new Set<string>();
+
+    boardTiles.forEach((tile) => {
+      if (!getTileDesign(tile.name)) {
+        missing.add(tile.name);
+      }
+    });
+
+    return Array.from(missing).sort();
+  }, [boardTiles, getTileDesign]);
+
+  const lastUnresolvedSignatureRef = useRef<string>("");
+
+  useEffect(() => {
+    if (unresolvedTileNames.length === 0) {
+      lastUnresolvedSignatureRef.current = "";
+      return;
+    }
+
+    const signature = unresolvedTileNames.join("|");
+    if (signature === lastUnresolvedSignatureRef.current) {
+      return;
+    }
+
+    console.warn("Tile symbol lookup failed for names:", unresolvedTileNames);
+    lastUnresolvedSignatureRef.current = signature;
+  }, [unresolvedTileNames]);
 
   const getTileIcon = (tileName: string) => {
     const SymbolComponent = getTileDesign(tileName);
@@ -128,7 +207,51 @@ const Board = () => {
             Group 3: Status
           </div>
           <div>VISIBLE LAYERS {visibleLayers.filter(Boolean).length}/{layerIndices.length}</div>
-          <div>VISIBLE TILES {visibleTiles.length}/{boardTiles.length}</div>
+          <div>VISIBLE TILES {visibleTiles.length}/{activeTileCount}</div>
+          <div>MATCHED TILES {matchedTileCount}</div>
+          <div>UNRESOLVED SYMBOLS {unresolvedTileNames.length}</div>
+          {unresolvedTileNames.length > 0 && (
+            <div className="mt-1 break-words text-[10px] text-amber-200/90">
+              {unresolvedTileNames.join(", ")}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-3 rounded border border-green-300/30 bg-black/40 p-2 text-xs">
+          <div className="mb-2 border-b border-green-300/20 pb-1 text-[11px] uppercase tracking-[0.16em] text-green-300/75">
+            Group 4: Gameplay Logs
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <span>AVAILABLE TILES</span>
+            <span className={availableTileCount > 0 ? "text-emerald-300" : "text-rose-300"}>{availableTileCount}</span>
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <span>MATCHED TILES</span>
+            <span className={matchedTileCount > 0 ? "text-sky-300" : "text-slate-300"}>{matchedTileCount}</span>
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <span>UNAVAILABLE TILES</span>
+            <span className={unavailableTileCount > availableTileCount ? "text-amber-300" : "text-green-300"}>{unavailableTileCount}</span>
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <span>AVAILABLE MOVES</span>
+            <span className={availableMoves > 0 ? "text-emerald-300" : "text-rose-300"}>{availableMoves}</span>
+          </div>
+          <div className="mt-1 flex items-center justify-between gap-2 border-t border-green-300/20 pt-1">
+            <span>SOLVABILITY</span>
+            <span
+              className={
+                isClear ? "text-cyan-300" : isDeadlock ? "text-rose-300" : "text-emerald-300"
+              }
+            >
+              {solvabilityLabel}
+            </span>
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <span>COMPLETION</span>
+            <span className="text-cyan-300">{completionPercent}%</span>
+          </div>
+          <div className="break-words text-[10px] text-green-200/80">{completionLabel}</div>
         </div>
       </div>
 
