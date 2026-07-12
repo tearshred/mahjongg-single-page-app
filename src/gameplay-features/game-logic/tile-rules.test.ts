@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { GridPosition } from "../../types/BoardLayouts";
 import type { TileDataWithState } from "../../types/tile-meta";
-import { areTilesMatch, computeTileBlockers, isTileFree } from "./tile-rules";
+import { areTilesMatch, computeTileBlockers, hasSolvableMove, isTileFree } from "./tile-rules";
 
 function createTile(overrides: Partial<TileDataWithState> & { position: GridPosition }): TileDataWithState {
   return {
@@ -59,5 +59,37 @@ describe("tile-rules", () => {
     const doraTile = createTile({ name: "Pin5-Dora", value: "Pin5-Dora", position: { layer: 0, row: 2, col: 4, gridRow: 3, gridColumn: 5 } });
 
     expect(areTilesMatch(baseTile, doraTile)).toBe(true);
+  });
+
+  describe("hasSolvableMove", () => {
+    it("returns true when two free matching tiles exist", () => {
+      const tileA = createTile({ name: "Sou1", value: "Sou1", position: { layer: 0, row: 0, col: 0, gridRow: 1, gridColumn: 1 } });
+      const tileB = createTile({ name: "Sou1", value: "Sou1", position: { layer: 0, row: 0, col: 2, gridRow: 1, gridColumn: 3 } });
+
+      expect(hasSolvableMove([tileA, tileB])).toBe(true);
+    });
+
+    it("returns false when the only matching pair is blocked", () => {
+      // Center is blocked left and right by neighbors; its match is on the far side but also blocked
+      const left  = createTile({ name: "Pin3", value: "Pin3", position: { layer: 0, row: 3, col: 3, gridRow: 4, gridColumn: 4 } });
+      const center = createTile({ name: "Pin3", value: "Pin3", position: { layer: 0, row: 3, col: 4, gridRow: 4, gridColumn: 5 } });
+      const right  = createTile({ name: "Pin3", value: "Pin3", position: { layer: 0, row: 3, col: 5, gridRow: 4, gridColumn: 6 } });
+      // left is blocked on its right by center; right is blocked on its left by center;
+      // center is blocked on both sides — so no free pair of Pin3 exists.
+
+      expect(hasSolvableMove([left, center, right])).toBe(false);
+    });
+
+    it("returns false when there are no tiles left", () => {
+      expect(hasSolvableMove([])).toBe(false);
+    });
+
+    it("ignores matched tiles when checking for moves", () => {
+      const matched = createTile({ name: "Sou1", value: "Sou1", isMatched: true, position: { layer: 0, row: 0, col: 0, gridRow: 1, gridColumn: 1 } });
+      const active  = createTile({ name: "Sou1", value: "Sou1", position: { layer: 0, row: 0, col: 2, gridRow: 1, gridColumn: 3 } });
+
+      // Only one unmatched Sou1 tile — no valid pair
+      expect(hasSolvableMove([matched, active])).toBe(false);
+    });
   });
 });

@@ -13,7 +13,7 @@ import {
 } from "../utils/tilePlacement";
 
 const Board = () => {
-  const { boardTiles, selectedTile, deselectAllTiles, selectTile } =
+  const { boardTiles, selectedTile, deselectAllTiles, selectTile, hasAnyMove } =
     useMahjonggBoard();
   const { getTileDesign } = useMahjonggTileDesign();
   const { gridDimensions } = useLayoutConfig(); // Get dynamic dimensions
@@ -129,8 +129,21 @@ const Board = () => {
           </div>
           <div>VISIBLE LAYERS {visibleLayers.filter(Boolean).length}/{layerIndices.length}</div>
           <div>VISIBLE TILES {visibleTiles.length}/{boardTiles.length}</div>
+          <div className={hasAnyMove ? "text-green-300" : "text-red-400 font-semibold"}>
+            {hasAnyMove ? "MOVES AVAILABLE" : "NO MOVES — STUCK"}
+          </div>
         </div>
       </div>
+
+      {/* No-moves overlay */}
+      {!hasAnyMove && boardTiles.some((t) => !t.isMatched) && (
+        <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center">
+          <div className="rounded-lg border border-red-400/60 bg-black/80 px-8 py-5 text-center shadow-2xl">
+            <div className="text-2xl font-bold text-red-400">No moves available</div>
+            <div className="mt-1 text-sm text-red-300/70">Shuffle the board to continue</div>
+          </div>
+        </div>
+      )}
 
       {/* No visible layers message */}
       {visibleTiles.length === 0 && (

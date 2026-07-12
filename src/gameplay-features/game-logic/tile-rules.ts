@@ -106,3 +106,23 @@ export function areTilesMatch(firstTile: TileDataWithState, secondTile: TileData
 
     return normalizeTileName(firstTile.name) === normalizeTileName(secondTile.name);
 }
+
+/**
+ * Returns true if there is at least one valid move remaining on the board —
+ * i.e. two free tiles that match each other.
+ * Returns false when the board is stuck (no moves available).
+ */
+export function hasSolvableMove(tiles: TileDataWithState[]): boolean {
+    const active = tiles.filter((tile) => !tile.isMatched);
+    const free = active.filter((tile) => isTileFree(tile, active));
+
+    for (let i = 0; i < free.length; i++) {
+        for (let j = i + 1; j < free.length; j++) {
+            if (areTilesMatch(free[i], free[j])) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
