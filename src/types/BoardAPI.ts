@@ -33,6 +33,12 @@ export interface MahjonggBoardAPI {
    */
   selectedTile: TileDataWithState | null;
 
+  /**
+   * True when at least one valid pair of free matching tiles exists on the board.
+   * False when the player is stuck and no moves are available.
+   */
+  hasAnyMove: boolean;
+
   // Future-proofing: Placeholder for essential game logic functions.
   /**
    * Checks if the currently selected tiles form a valid match.

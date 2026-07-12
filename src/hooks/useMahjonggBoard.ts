@@ -9,7 +9,7 @@ import {
 } from "../utils/layoutMapper";
 import { assignRandomTiles } from "../utils/tileRandomizer"; // ✅ added
 import { isExactTile } from "../utils/tileUtils";
-import { areTilesMatch, isTileFree } from "../gameplay-features/game-logic/tile-rules";
+import { areTilesMatch, isTileFree, hasSolvableMove } from "../gameplay-features/game-logic/tile-rules";
 
 const MATCHED_TILE_DISPLAY_MS = 320;
 
@@ -177,10 +177,13 @@ export function useMahjonggBoard(): MahjonggBoardAPI {
   const selectedTile =
     boardTiles.find((tile) => tile.isSelected) || null;
 
+  const hasAnyMove = hasSolvableMove(boardTiles);
+
   return {
     boardTiles,
     selectTile,
     deselectAllTiles,
     selectedTile,
+    hasAnyMove,
   };
 }
