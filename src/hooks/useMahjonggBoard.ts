@@ -9,7 +9,7 @@ import {
 } from "../utils/layoutMapper";
 import { assignRandomTiles } from "../utils/tileRandomizer"; // ✅ added
 import { isExactTile } from "../utils/tileUtils";
-import { areTilesMatch, isTileFree } from "../gameplay-features/game-logic/tile-rules";
+import { areTilesMatch, computeFreeTileKeys } from "../gameplay-features/game-logic/tile-rules";
 
 const MATCHED_TILE_DISPLAY_MS = 320;
 
@@ -22,11 +22,7 @@ function deriveBoardState(
   selectedKey: string | null
 ): TileDataWithState[] {
   const activeTiles = tiles.filter((tile) => !tile.isMatched);
-  const playableKeys = new Set(
-    activeTiles
-      .filter((tile) => isTileFree(tile, activeTiles))
-      .map((tile) => getTileKey(tile))
-  );
+  const playableKeys = computeFreeTileKeys(activeTiles);
   const selectedTile = selectedKey
     ? activeTiles.find((tile) => getTileKey(tile) === selectedKey && playableKeys.has(selectedKey)) ?? null
     : null;

@@ -1,48 +1,88 @@
 import type { TileDataWithState } from "../../types/tile-meta";
+import { getTilePlacement, TILE_HEIGHT, TILE_WIDTH } from "../../utils/tilePlacement";
 import { isExactTile } from "../../utils/tileUtils";
+
+const TOP_OVERLAP_X = TILE_WIDTH * 0.35;
+const TOP_OVERLAP_Y = TILE_HEIGHT * 0.35;
+const SIDE_OVERLAP_Y = TILE_HEIGHT * 0.45;
+const SIDE_BLOCK_ZONE = TILE_WIDTH * 0.35;
 
 function normalizeTileName(name: string): string {
     return name.replace(/-Dora$/i, "");
 }
 
-// Build a position lookup map for O(1) checks instead of O(n²) geometry
-function buildPositionMap(
-    tiles: TileDataWithState[]
-): Map<string, TileDataWithState> {
-    const map = new Map<string, TileDataWithState>();
-    tiles.forEach((tile) => {
-        if (!tile.isMatched) {
-            const key = `${tile.position.layer},${tile.position.row},${tile.position.col}`;
-            map.set(key, tile);
-        }
-    });
-    return map;
+function getOverlapAmount(startA: number, endA: number, startB: number, endB: number) {
+    return Math.max(0, Math.min(endA, endB) - Math.max(startA, startB));
 }
 
-// Grid-based free check: O(1) instead of O(n²)
-// A tile is free if:
-// 1. Nothing is directly above it (no tile at higher layer with same row/col)
-// 2. On same layer: either left OR right is open (not pinched between two tiles)
+function getTileKey(tile: TileDataWithState): string {
+    return `${tile.position.layer}-${tile.position.row}-${tile.position.col}`;
+}
+
+/**
+ * Compute the set of free tile keys in a single O(n²) pass.
+ *
+ * Tile placements are pre-computed once into a map so each pair-wise
+ * overlap check is pure arithmetic — no repeated object allocation.
+ * Call this once per state change and use the returned Set for O(1) lookups.
+ */
+export function computeFreeTileKeys(activeTiles: TileDataWithState[]): Set<string> {
+    // Pre-compute every pixel placement exactly once
+    const placements = new Map<string, ReturnType<typeof getTilePlacement>>();
+    activeTiles.forEach((tile) => {
+        placements.set(getTileKey(tile), getTilePlacement(tile.position));
+    });
+
+    const freeKeys = new Set<string>();
+
+    activeTiles.forEach((tile) => {
+        const key = getTileKey(tile);
+        const p = placements.get(key)!;
+
+        let isTopBlocked = false;
+        let isLeftBlocked = false;
+        let isRightBlocked = false;
+
+        for (const candidate of activeTiles) {
+            if (isExactTile(tile, candidate)) continue;
+
+            const cp = placements.get(getTileKey(candidate))!;
+            const hOverlap = getOverlapAmount(p.left, p.right, cp.left, cp.right);
+            const vOverlap = getOverlapAmount(p.top, p.bottom, cp.top, cp.bottom);
+
+            if (
+                candidate.position.layer > tile.position.layer &&
+                hOverlap >= TOP_OVERLAP_X &&
+                vOverlap >= TOP_OVERLAP_Y
+            ) {
+                isTopBlocked = true;
+                break; // No need to check further once top-blocked
+            }
+
+            if (candidate.position.layer === tile.position.layer && vOverlap >= SIDE_OVERLAP_Y) {
+                const leftGap = p.left - cp.right;
+                const rightGap = cp.left - p.right;
+                if (cp.left < p.left && leftGap <= SIDE_BLOCK_ZONE) isLeftBlocked = true;
+                if (cp.right > p.right && rightGap <= SIDE_BLOCK_ZONE) isRightBlocked = true;
+            }
+        }
+
+        if (!isTopBlocked && (!isLeftBlocked || !isRightBlocked)) {
+            freeKeys.add(key);
+        }
+    });
+
+    return freeKeys;
+}
+
+// Thin wrapper for tests and one-off checks
 export function isTileFree(
     tile: TileDataWithState,
     allTiles: TileDataWithState[]
 ): boolean {
-    const posMap = buildPositionMap(allTiles);
-    const { layer, row, col } = tile.position;
-
-    // Check if blocked from above: any unmatched tile at higher layer, same row/col
-    for (let checkLayer = layer + 1; checkLayer < 10; checkLayer++) {
-        if (posMap.has(`${checkLayer},${row},${col}`)) {
-            return false;
-        }
-    }
-
-    // Check same-layer blocking: is this tile pinched between left AND right neighbors?
-    const leftBlocked = posMap.has(`${layer},${row},${col - 1}`);
-    const rightBlocked = posMap.has(`${layer},${row},${col + 1}`);
-
-    // Free if at least one side is open, OR neither side has a neighbor
-    return !(leftBlocked && rightBlocked);
+    const activeTiles = allTiles.filter((t) => !t.isMatched);
+    const freeKeys = computeFreeTileKeys(activeTiles);
+    return freeKeys.has(getTileKey(tile));
 }
 
 export function areTilesMatch(
