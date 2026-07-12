@@ -1,105 +1,94 @@
 import type { TileDataWithState } from "../../types/tile-meta";
 import { getTilePlacement, TILE_HEIGHT, TILE_WIDTH } from "../../utils/tilePlacement";
 import { isExactTile } from "../../utils/tileUtils";
-import type { TileBlocked } from "../../types/game-logic";
 
 const TOP_OVERLAP_X = TILE_WIDTH * 0.35;
 const TOP_OVERLAP_Y = TILE_HEIGHT * 0.35;
 const SIDE_OVERLAP_Y = TILE_HEIGHT * 0.45;
 const SIDE_BLOCK_ZONE = TILE_WIDTH * 0.35;
 
-function getOverlapAmount(startA: number, endA: number, startB: number, endB: number) {
-    return Math.max(0, Math.min(endA, endB) - Math.max(startA, startB));
-}
-
 function normalizeTileName(name: string): string {
     return name.replace(/-Dora$/i, "");
 }
 
-export function computeTileBlockers(
-    tile: TileDataWithState,
-    allTiles: TileDataWithState[]
-): TileBlocked {
-    const tilePlacement = getTilePlacement(tile.position);
-    const blockedBy: TileDataWithState[] = [];
-    let isLeftBlocked = false;
-    let isRightBlocked = false;
-    let isTopBlocked = false;
+function getOverlapAmount(startA: number, endA: number, startB: number, endB: number) {
+    return Math.max(0, Math.min(endA, endB) - Math.max(startA, startB));
+}
 
-    allTiles.forEach((candidate) => {
-        if (candidate.isMatched || isExactTile(tile, candidate)) {
-            return;
-        }
+function getTileKey(tile: TileDataWithState): string {
+    return `${tile.position.layer}-${tile.position.row}-${tile.position.col}`;
+}
 
-        const candidatePlacement = getTilePlacement(candidate.position);
-        const horizontalOverlap = getOverlapAmount(
-            tilePlacement.left,
-            tilePlacement.right,
-            candidatePlacement.left,
-            candidatePlacement.right
-        );
-        const verticalOverlap = getOverlapAmount(
-            tilePlacement.top,
-            tilePlacement.bottom,
-            candidatePlacement.top,
-            candidatePlacement.bottom
-        );
+/**
+ * Compute the set of free tile keys in a single O(n²) pass.
+ *
+ * Tile placements are pre-computed once into a map so each pair-wise
+ * overlap check is pure arithmetic — no repeated object allocation.
+ * Call this once per state change and use the returned Set for O(1) lookups.
+ */
+export function computeFreeTileKeys(activeTiles: TileDataWithState[]): Set<string> {
+    // Pre-compute every pixel placement exactly once
+    const placements = new Map<string, ReturnType<typeof getTilePlacement>>();
+    activeTiles.forEach((tile) => {
+        placements.set(getTileKey(tile), getTilePlacement(tile.position));
+    });
 
-        let doesBlock = false;
+    const freeKeys = new Set<string>();
 
-        if (
-            candidate.position.layer > tile.position.layer &&
-            horizontalOverlap >= TOP_OVERLAP_X &&
-            verticalOverlap >= TOP_OVERLAP_Y
-        ) {
-            isTopBlocked = true;
-            doesBlock = true;
-        }
+    activeTiles.forEach((tile) => {
+        const key = getTileKey(tile);
+        const p = placements.get(key)!;
 
-        if (candidate.position.layer === tile.position.layer && verticalOverlap >= SIDE_OVERLAP_Y) {
-            const leftGap = tilePlacement.left - candidatePlacement.right;
-            const rightGap = candidatePlacement.left - tilePlacement.right;
+        let isTopBlocked = false;
+        let isLeftBlocked = false;
+        let isRightBlocked = false;
+
+        for (const candidate of activeTiles) {
+            if (isExactTile(tile, candidate)) continue;
+
+            const cp = placements.get(getTileKey(candidate))!;
+            const hOverlap = getOverlapAmount(p.left, p.right, cp.left, cp.right);
+            const vOverlap = getOverlapAmount(p.top, p.bottom, cp.top, cp.bottom);
 
             if (
-                candidatePlacement.left < tilePlacement.left &&
-                leftGap <= SIDE_BLOCK_ZONE
+                candidate.position.layer > tile.position.layer &&
+                hOverlap >= TOP_OVERLAP_X &&
+                vOverlap >= TOP_OVERLAP_Y
             ) {
-                isLeftBlocked = true;
-                doesBlock = true;
+                isTopBlocked = true;
+                break; // No need to check further once top-blocked
             }
 
-            if (
-                candidatePlacement.right > tilePlacement.right &&
-                rightGap <= SIDE_BLOCK_ZONE
-            ) {
-                isRightBlocked = true;
-                doesBlock = true;
+            if (candidate.position.layer === tile.position.layer && vOverlap >= SIDE_OVERLAP_Y) {
+                const leftGap = p.left - cp.right;
+                const rightGap = cp.left - p.right;
+                if (cp.left < p.left && leftGap <= SIDE_BLOCK_ZONE) isLeftBlocked = true;
+                if (cp.right > p.right && rightGap <= SIDE_BLOCK_ZONE) isRightBlocked = true;
             }
         }
 
-        if (doesBlock) {
-            blockedBy.push(candidate);
+        if (!isTopBlocked && (!isLeftBlocked || !isRightBlocked)) {
+            freeKeys.add(key);
         }
     });
 
-    return {
-        isLeftBlocked,
-        isRightBlocked,
-        isTopBlocked,
-        blockedBy,
-    };
+    return freeKeys;
 }
 
-// Checks if the tile is free to be selected
+// Thin wrapper for tests and one-off checks
 export function isTileFree(
     tile: TileDataWithState,
     allTiles: TileDataWithState[]
 ): boolean {
-    const blockers = computeTileBlockers(tile, allTiles);
-    return !blockers.isTopBlocked && (!blockers.isLeftBlocked || !blockers.isRightBlocked);
+    const activeTiles = allTiles.filter((t) => !t.isMatched);
+    const freeKeys = computeFreeTileKeys(activeTiles);
+    return freeKeys.has(getTileKey(tile));
 }
 
-export function areTilesMatch(firstTile: TileDataWithState, secondTile: TileDataWithState): boolean {
+export function areTilesMatch(
+    firstTile: TileDataWithState,
+    secondTile: TileDataWithState
+): boolean {
     if (isExactTile(firstTile, secondTile)) {
         return false;
     }

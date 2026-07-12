@@ -1,8 +1,9 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import MahjongTile from "./Tile";
 import { useMahjonggBoard } from "../hooks/useMahjonggBoard";
 import { useMahjonggTileDesign } from "../hooks/useMahjonggTileDesign";
 import { useLayoutConfig } from "../hooks/useLayoutConfig";
+import { areTilesMatch } from "../gameplay-features/game-logic/tile-rules";
 import {
   TILE_HEIGHT,
   TILE_HORIZONTAL_STEP,
@@ -12,8 +13,8 @@ import {
   TILE_WIDTH,
 } from "../utils/tilePlacement";
 
-const Board = () => {
-  const { boardTiles, selectedTile, deselectAllTiles, selectTile } =
+const Board = ({ onNewGame }: { onNewGame: () => void }) => {
+  const { boardTiles, selectedTile, deselectAllTiles, selectTile, handleUndo, handleRedo, canUndo, canRedo, undoCount, totalTileCount } =
     useMahjonggBoard();
   const { getTileDesign } = useMahjonggTileDesign();
   const { gridDimensions } = useLayoutConfig(); // Get dynamic dimensions
@@ -34,6 +35,9 @@ const Board = () => {
   const boardWidth = boardPaddingLeft + (maxCol - 1) * TILE_HORIZONTAL_STEP + TILE_WIDTH + 24;
   const boardHeight = boardPaddingTop + (maxRow - 1) * TILE_VERTICAL_STEP + TILE_HEIGHT + 32;
 
+  // Debug panel visibility
+  const [isDebugVisible, setIsDebugVisible] = useState(true);
+
   // Layer visibility state for debugging
   const [visibleLayers, setVisibleLayers] = useState<boolean[]>(() =>
     Array.from({ length: maxLayer + 1 }, () => true)
@@ -47,10 +51,116 @@ const Board = () => {
   }, [maxLayer]);
 
   // Filter tiles based on visible layers
-  const visibleTiles = useMemo(() => 
-    boardTiles.filter(tile => visibleLayers[tile.position.layer] ?? true), 
+  const visibleTiles = useMemo(
+    () =>
+      boardTiles.filter(
+        (tile) => !tile.isMatched && (visibleLayers[tile.position.layer] ?? true)
+      ),
     [boardTiles, visibleLayers]
   );
+
+  // Active = tiles still in the array and not in their removal animation.
+  // Matched = tiles fully removed (no longer in array) + any currently animating out.
+  const activeTileCount = useMemo(
+    () => boardTiles.filter((tile) => !tile.isMatched).length,
+    [boardTiles]
+  );
+  const matchedTileCount = totalTileCount - activeTileCount;
+
+  const availableTileCount = useMemo(
+    () => boardTiles.filter((tile) => !tile.isMatched && tile.isPlayable).length,
+    [boardTiles]
+  );
+
+  const unavailableTileCount = useMemo(
+    () => boardTiles.filter((tile) => !tile.isMatched && !tile.isPlayable).length,
+    [boardTiles]
+  );
+
+  const availableMoves = useMemo(() => {
+    const availableTiles = boardTiles.filter((tile) => !tile.isMatched && tile.isPlayable);
+    let moves = 0;
+
+    for (let i = 0; i < availableTiles.length; i += 1) {
+      for (let j = i + 1; j < availableTiles.length; j += 1) {
+        if (areTilesMatch(availableTiles[i], availableTiles[j])) {
+          moves += 1;
+        }
+      }
+    }
+
+    return moves;
+  }, [boardTiles]);
+
+  const completionPercent = useMemo(() => {
+    if (totalTileCount === 0) return 0;
+    return Math.round((matchedTileCount / totalTileCount) * 100);
+  }, [totalTileCount, matchedTileCount]);
+
+  const isDeadlock = availableTileCount > 0 && availableMoves === 0;
+  const isClear = activeTileCount === 0;
+  const solvabilityLabel = isClear ? "CLEAR" : isDeadlock ? "DEADLOCK" : "PLAYABLE";
+  const completionLabel = isClear
+    ? "COMPLETE"
+    : `${activeTileCount} ACTIVE / ${matchedTileCount} MATCHED`;
+
+  const unresolvedTileNames = useMemo(() => {
+    const missing = new Set<string>();
+
+    boardTiles.forEach((tile) => {
+      if (!getTileDesign(tile.name)) {
+        missing.add(tile.name);
+      }
+    });
+
+    return Array.from(missing).sort();
+  }, [boardTiles, getTileDesign]);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "z" && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+      } else if (
+        (e.key === "y" && (e.ctrlKey || e.metaKey)) ||
+        (e.key === "z" && (e.ctrlKey || e.metaKey) && e.shiftKey)
+      ) {
+        e.preventDefault();
+        handleRedo();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [handleUndo, handleRedo]);
+
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => setElapsedSeconds((s) => s + 1), 1000);
+    return () => clearInterval(interval);
+  }, []);
+  const formattedTime = useCallback(() => {
+    const h = Math.floor(elapsedSeconds / 3600);
+    const m = Math.floor((elapsedSeconds % 3600) / 60);
+    const s = elapsedSeconds % 60;
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }, [elapsedSeconds]);
+
+  const lastUnresolvedSignatureRef = useRef<string>("");
+
+  useEffect(() => {
+    if (unresolvedTileNames.length === 0) {
+      lastUnresolvedSignatureRef.current = "";
+      return;
+    }
+
+    const signature = unresolvedTileNames.join("|");
+    if (signature === lastUnresolvedSignatureRef.current) {
+      return;
+    }
+
+    console.warn("Tile symbol lookup failed for names:", unresolvedTileNames);
+    lastUnresolvedSignatureRef.current = signature;
+  }, [unresolvedTileNames]);
 
   const getTileIcon = (tileName: string) => {
     const SymbolComponent = getTileDesign(tileName);
@@ -80,57 +190,154 @@ const Board = () => {
       />
       <div className="absolute inset-0 z-0" onClick={deselectAllTiles}></div>
 
-      <div
-        className="absolute left-3 top-3 bottom-3 z-50 w-64 overflow-hidden rounded border border-green-300/40 bg-black/95 p-3 text-green-100 shadow-lg"
-        style={{
-          fontFamily: "Monaco, Menlo, Consolas, 'Liberation Mono', 'Courier New', monospace",
-          letterSpacing: "0.025em",
-        }}
-      >
-        <div className="text-xs uppercase tracking-[0.2em] text-green-300/70">Board Debug Console</div>
+      {/* Debug panel toggle button (visible when panel is hidden) */}
+      {!isDebugVisible && (
+        <button
+          onClick={() => setIsDebugVisible(true)}
+          className="absolute left-3 top-3 z-50 rounded border border-green-300/40 bg-black/80 px-3 py-2 text-xs font-semibold uppercase tracking-widest text-green-300 shadow-lg backdrop-blur-sm transition-colors hover:bg-green-300/10 active:bg-green-300/20"
+        >
+          DBG
+        </button>
+      )}
 
-        <div className="mt-3 rounded border border-green-300/30 bg-black/40 p-2">
-          <div className="mb-2 border-b border-green-300/20 pb-1 text-[11px] uppercase tracking-[0.16em] text-green-300/75">
-            Group 1: Layers
+      {/* Debug panel */}
+      {isDebugVisible && (
+        <div
+          className="absolute left-3 top-3 bottom-3 z-50 w-64 overflow-y-auto rounded border border-green-300/40 bg-black/95 text-green-100 shadow-lg"
+          style={{
+            fontFamily: "Monaco, Menlo, Consolas, 'Liberation Mono', 'Courier New', monospace",
+            letterSpacing: "0.025em",
+          }}
+        >
+          {/* Header with hide button */}
+          <div className="sticky top-0 z-10 flex items-center justify-between bg-black/95 px-3 pt-3 pb-2 border-b border-green-300/20">
+            <div className="text-xs uppercase tracking-[0.2em] text-green-300/70">Debug Console</div>
+            <button
+              onClick={() => setIsDebugVisible(false)}
+              className="flex h-7 w-7 items-center justify-center rounded border border-green-300/30 text-green-300/60 transition-colors hover:border-green-300/60 hover:text-green-300 active:bg-green-300/10"
+              aria-label="Hide debug panel"
+            >
+              ✕
+            </button>
           </div>
-          <div className="max-h-64 space-y-1 overflow-y-auto pr-1 text-xs">
-            {layerIndices.map((layer) => (
-              <label key={layer} className="flex items-center justify-between gap-2 whitespace-nowrap rounded px-1 py-0.5 hover:bg-green-300/10">
-                <span>Layer {layer + 1}</span>
-                <input
-                  type="checkbox"
-                  checked={visibleLayers[layer] ?? true}
-                  onChange={() =>
-                    setVisibleLayers((prev) =>
-                      prev.map((visible, i) => (i === layer ? !visible : visible))
-                    )
-                  }
-                  className="h-3 w-3 accent-green-300"
-                />
-              </label>
-            ))}
+
+          <div className="p-3 space-y-3">
+            {/* Group 1: Layers */}
+            <div className="rounded border border-green-300/30 bg-black/40 p-2">
+              <div className="mb-2 border-b border-green-300/20 pb-1 text-[11px] uppercase tracking-[0.16em] text-green-300/75">
+                Group 1: Layers
+              </div>
+              <div className="max-h-48 space-y-0.5 overflow-y-auto pr-1 text-xs">
+                {layerIndices.map((layer) => (
+                  <label key={layer} className="flex min-h-[36px] items-center justify-between gap-2 rounded px-1 hover:bg-green-300/10 active:bg-green-300/15">
+                    <span>Layer {layer + 1}</span>
+                    <input
+                      type="checkbox"
+                      checked={visibleLayers[layer] ?? true}
+                      onChange={() =>
+                        setVisibleLayers((prev) =>
+                          prev.map((visible, i) => (i === layer ? !visible : visible))
+                        )
+                      }
+                      className="h-4 w-4 accent-green-300"
+                    />
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Group 2: Selection */}
+            <div className="rounded border border-green-300/30 bg-black/40 p-2">
+              <div className="mb-2 border-b border-green-300/20 pb-1 text-[11px] uppercase tracking-[0.16em] text-green-300/75">
+                Group 2: Selection
+              </div>
+              <div className="w-full overflow-hidden">
+                <span className="block truncate text-xs" title={selectedTile ? `${selectedTile.name} [L${selectedTile.position.layer + 1} R${selectedTile.position.row} C${selectedTile.position.col}]` : "NONE"}>
+                  {selectedTile
+                    ? `${selectedTile.name} [L${selectedTile.position.layer + 1} R${selectedTile.position.row} C${selectedTile.position.col}]`
+                    : "SELECTED NONE"}
+                </span>
+              </div>
+            </div>
+
+            {/* Group 3: Status */}
+            <div className="rounded border border-green-300/30 bg-black/40 p-2 text-xs">
+              <div className="mb-2 border-b border-green-300/20 pb-1 text-[11px] uppercase tracking-[0.16em] text-green-300/75">
+                Group 3: Status
+              </div>
+              <div className="space-y-1">
+                <div className="flex justify-between gap-2"><span className="text-green-300/60">LAYERS</span><span>{visibleLayers.filter(Boolean).length}/{layerIndices.length}</span></div>
+                <div className="flex justify-between gap-2"><span className="text-green-300/60">VISIBLE</span><span>{visibleTiles.length}/{activeTileCount}</span></div>
+                <div className="flex justify-between gap-2"><span className="text-green-300/60">MATCHED</span><span>{matchedTileCount}</span></div>
+                <div className="flex justify-between gap-2"><span className="text-green-300/60">UNRESOLVED</span><span className={unresolvedTileNames.length > 0 ? "text-amber-300" : ""}>{unresolvedTileNames.length}</span></div>
+              </div>
+              {unresolvedTileNames.length > 0 && (
+                <div className="mt-1 break-all text-[10px] text-amber-200/90">
+                  {unresolvedTileNames.join(", ")}
+                </div>
+              )}
+            </div>
+
+            {/* Group 4: Gameplay Logs */}
+            <div className="rounded border border-green-300/30 bg-black/40 p-2 text-xs">
+              <div className="mb-2 border-b border-green-300/20 pb-1 text-[11px] uppercase tracking-[0.16em] text-green-300/75">
+                Group 4: Gameplay
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-green-300/60">AVAILABLE</span>
+                  <span className={availableTileCount > 0 ? "text-emerald-300" : "text-rose-300"}>{availableTileCount}</span>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-green-300/60">MATCHED</span>
+                  <span className={matchedTileCount > 0 ? "text-sky-300" : "text-slate-300"}>{matchedTileCount}</span>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-green-300/60">BLOCKED</span>
+                  <span className={unavailableTileCount > availableTileCount ? "text-amber-300" : "text-green-300"}>{unavailableTileCount}</span>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-green-300/60">MOVES</span>
+                  <span className={availableMoves > 0 ? "text-emerald-300" : "text-rose-300"}>{availableMoves}</span>
+                </div>
+                <div className="flex items-center justify-between gap-2 border-t border-green-300/20 pt-1">
+                  <span className="text-green-300/60">STATUS</span>
+                  <span className={isClear ? "text-cyan-300" : isDeadlock ? "text-rose-300" : "text-emerald-300"}>{solvabilityLabel}</span>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-green-300/60">DONE</span>
+                  <span className="text-cyan-300">{completionPercent}%</span>
+                </div>
+                <div className="text-[10px] text-green-200/50">{completionLabel}</div>
+              </div>
+            </div>
+
+            {/* Group 5: History */}
+            <div className="rounded border border-green-300/30 bg-black/40 p-2 text-xs">
+              <div className="mb-2 border-b border-green-300/20 pb-1 text-[11px] uppercase tracking-[0.16em] text-green-300/75">
+                Group 5: History
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleUndo}
+                  disabled={!canUndo}
+                  className="flex-1 min-h-[40px] rounded border border-green-300/40 px-2 py-2 text-[11px] uppercase tracking-wider transition-colors hover:bg-green-300/10 active:bg-green-300/20 disabled:cursor-not-allowed disabled:opacity-30"
+                >
+                  ↩ Undo {canUndo ? `(${undoCount}/5)` : ""}
+                </button>
+                <button
+                  onClick={handleRedo}
+                  disabled={!canRedo}
+                  className="flex-1 min-h-[40px] rounded border border-green-300/40 px-2 py-2 text-[11px] uppercase tracking-wider transition-colors hover:bg-green-300/10 active:bg-green-300/20 disabled:cursor-not-allowed disabled:opacity-30"
+                >
+                  ↪ Redo
+                </button>
+              </div>
+              <div className="mt-1 text-[10px] text-green-200/50">Ctrl+Z / Ctrl+Y</div>
+            </div>
           </div>
         </div>
-
-        <div className="mt-3 rounded border border-green-300/30 bg-black/40 p-2">
-          <div className="mb-2 border-b border-green-300/20 pb-1 text-[11px] uppercase tracking-[0.16em] text-green-300/75">
-            Group 2: Selection
-          </div>
-          <span className="block min-w-0 break-words text-xs">
-            {selectedTile
-              ? `SELECTED ${selectedTile.name} [L${selectedTile.position.layer + 1} R${selectedTile.position.row} C${selectedTile.position.col}]`
-              : "SELECTED NONE"}
-          </span>
-        </div>
-
-        <div className="mt-3 rounded border border-green-300/30 bg-black/40 p-2 text-xs">
-          <div className="mb-2 border-b border-green-300/20 pb-1 text-[11px] uppercase tracking-[0.16em] text-green-300/75">
-            Group 3: Status
-          </div>
-          <div>VISIBLE LAYERS {visibleLayers.filter(Boolean).length}/{layerIndices.length}</div>
-          <div>VISIBLE TILES {visibleTiles.length}/{boardTiles.length}</div>
-        </div>
-      </div>
+      )}
 
       {/* No visible layers message */}
       {visibleTiles.length === 0 && (
@@ -139,11 +346,31 @@ const Board = () => {
         </div>
       )}
 
+      {/* Session timer — center bottom */}
+      <div
+        className="pointer-events-none absolute bottom-4 left-0 right-0 z-50 flex justify-center"
+      >
+        <div
+          className="rounded-lg border border-white/20 bg-black/60 px-5 py-2 text-sm font-semibold tracking-widest text-white/80 shadow-lg backdrop-blur-sm"
+          style={{ fontFamily: "Monaco, Menlo, Consolas, 'Liberation Mono', 'Courier New', monospace" }}
+        >
+          {formattedTime()}
+        </div>
+      </div>
+
+      {/* New Game button — bottom-right, opposite the debug panel */}
+      <button
+        onClick={onNewGame}
+        className="absolute bottom-4 right-4 z-50 rounded-lg border border-white/20 bg-black/60 px-5 py-2.5 text-sm font-semibold uppercase tracking-widest text-white/80 shadow-lg backdrop-blur-sm transition-colors hover:bg-white/10 hover:text-white"
+      >
+        New Game
+      </button>
+
       {/* Keep the board clear of the left debug panel */}
       <div
-        className="absolute inset-y-0 right-0 flex items-center justify-center overflow-auto px-2 pb-2 pt-2"
+        className="absolute inset-y-0 right-0 flex items-center justify-center overflow-auto px-2 pb-2 pt-2 transition-[left] duration-200"
         style={{
-          left: "17rem",
+          left: isDebugVisible ? "17rem" : "0",
         }}
       >
         <div

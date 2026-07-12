@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { GridPosition } from "../../types/BoardLayouts";
 import type { TileDataWithState } from "../../types/tile-meta";
-import { areTilesMatch, computeTileBlockers, isTileFree } from "./tile-rules";
+import { areTilesMatch, isTileFree } from "./tile-rules";
 
 function createTile(overrides: Partial<TileDataWithState> & { position: GridPosition }): TileDataWithState {
   return {
@@ -21,15 +21,11 @@ function createTile(overrides: Partial<TileDataWithState> & { position: GridPosi
 }
 
 describe("tile-rules", () => {
-  it("treats a tile as blocked when both horizontal sides are occupied", () => {
+  it("treats a tile as blocked when both horizontal sides are occupied (same layer)", () => {
     const centerTile = createTile({ position: { layer: 0, row: 3, col: 4, gridRow: 4, gridColumn: 5 } });
     const leftTile = createTile({ position: { layer: 0, row: 3, col: 3, gridRow: 4, gridColumn: 4 } });
     const rightTile = createTile({ position: { layer: 0, row: 3, col: 5, gridRow: 4, gridColumn: 6 } });
 
-    const blockers = computeTileBlockers(centerTile, [centerTile, leftTile, rightTile]);
-
-    expect(blockers.isLeftBlocked).toBe(true);
-    expect(blockers.isRightBlocked).toBe(true);
     expect(isTileFree(centerTile, [centerTile, leftTile, rightTile])).toBe(false);
   });
 
@@ -37,10 +33,6 @@ describe("tile-rules", () => {
     const centerTile = createTile({ position: { layer: 0, row: 3, col: 4, gridRow: 4, gridColumn: 5 } });
     const leftTile = createTile({ position: { layer: 0, row: 3, col: 3, gridRow: 4, gridColumn: 4 } });
 
-    const blockers = computeTileBlockers(centerTile, [centerTile, leftTile]);
-
-    expect(blockers.isLeftBlocked).toBe(true);
-    expect(blockers.isRightBlocked).toBe(false);
     expect(isTileFree(centerTile, [centerTile, leftTile])).toBe(true);
   });
 
@@ -48,10 +40,13 @@ describe("tile-rules", () => {
     const centerTile = createTile({ position: { layer: 0, row: 3, col: 4, gridRow: 4, gridColumn: 5 } });
     const topTile = createTile({ position: { layer: 1, row: 3, col: 4, gridRow: 4, gridColumn: 5 } });
 
-    const blockers = computeTileBlockers(centerTile, [centerTile, topTile]);
-
-    expect(blockers.isTopBlocked).toBe(true);
     expect(isTileFree(centerTile, [centerTile, topTile])).toBe(false);
+  });
+
+  it("allows a tile when unblocked from above and sides are clear", () => {
+    const tile = createTile({ position: { layer: 0, row: 3, col: 4, gridRow: 4, gridColumn: 5 } });
+
+    expect(isTileFree(tile, [tile])).toBe(true);
   });
 
   it("treats Dora variants as matching their base tile", () => {
