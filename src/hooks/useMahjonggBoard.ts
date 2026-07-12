@@ -126,54 +126,36 @@ export function useMahjonggBoard(): MahjonggBoardAPI {
   // 6️⃣ Selection API
   const selectTile = (clickedTile: TileDataWithState) => {
     const clickedKey = getTileKey(clickedTile);
-    let shouldRemoveMatchedTiles = false;
-    // Captured outside the updater so recordMove is called exactly once
-    // (React StrictMode calls updaters twice, which would double-record if called inside).
-    let matchSnapshot: TileDataWithState[] | null = null;
 
-    setBoardTiles((prev) => {
-      const nextClickedTile = prev.find((tile) => getTileKey(tile) === clickedKey);
+    const nextClickedTile = boardTiles.find((tile) => getTileKey(tile) === clickedKey);
+    if (!nextClickedTile || nextClickedTile.isMatched || !nextClickedTile.isPlayable) return;
 
-      if (!nextClickedTile || nextClickedTile.isMatched || !nextClickedTile.isPlayable) {
-        return prev;
-      }
+    const selectedTile = boardTiles.find((tile) => tile.isSelected && !tile.isMatched) ?? null;
 
-      const selectedTile = prev.find((tile) => tile.isSelected && !tile.isMatched) ?? null;
-
-      if (!selectedTile) {
-        return deriveBoardState(prev, clickedKey);
-      }
-
-      if (isExactTile(selectedTile, nextClickedTile)) {
-        return deriveBoardState(prev, null);
-      }
-
-      if (areTilesMatch(selectedTile, nextClickedTile)) {
-        shouldRemoveMatchedTiles = true;
-        matchSnapshot = prev;
-        const matchedBoard = prev.map((tile) => {
-          if (isExactTile(tile, selectedTile) || isExactTile(tile, nextClickedTile)) {
-            return {
-              ...tile,
-              isMatched: true,
-            };
-          }
-
-          return tile;
-        });
-
-        return deriveBoardState(matchedBoard, null);
-      }
-
-      return deriveBoardState(prev, clickedKey);
-    });
-
-    if (matchSnapshot) {
-      recordMove(matchSnapshot);
+    if (!selectedTile) {
+      setBoardTiles(deriveBoardState(boardTiles, clickedKey));
+      return;
     }
-    if (shouldRemoveMatchedTiles) {
+
+    if (isExactTile(selectedTile, nextClickedTile)) {
+      setBoardTiles(deriveBoardState(boardTiles, null));
+      return;
+    }
+
+    if (areTilesMatch(selectedTile, nextClickedTile)) {
+      const snapshot = boardTiles.filter((t) => !t.isMatched);
+      const matchedBoard = boardTiles.map((tile) =>
+        isExactTile(tile, selectedTile) || isExactTile(tile, nextClickedTile)
+          ? { ...tile, isMatched: true }
+          : tile
+      );
+      setBoardTiles(deriveBoardState(matchedBoard, null));
+      recordMove(snapshot);
       scheduleMatchedTileRemoval();
+      return;
     }
+
+    setBoardTiles(deriveBoardState(boardTiles, clickedKey));
   };
 
   const deselectAllTiles = () => {
@@ -185,10 +167,9 @@ export function useMahjonggBoard(): MahjonggBoardAPI {
       window.clearTimeout(matchedRemovalTimeoutRef.current);
       matchedRemovalTimeoutRef.current = null;
     }
-    // historyUndo reads synchronously from the ref so we can call it before setBoardTiles
     const restored = historyUndo(boardTiles);
     if (restored) {
-      setBoardTiles(deriveBoardState(restored, null));
+      setBoardTiles(deriveBoardState(restored.filter((t) => !t.isMatched), null));
     }
   };
 
@@ -217,5 +198,6 @@ export function useMahjonggBoard(): MahjonggBoardAPI {
     canUndo,
     canRedo,
     undoCount,
+    totalTileCount: initialTiles.length,
   };
 }

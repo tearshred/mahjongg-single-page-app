@@ -38,6 +38,7 @@ export interface MahjonggBoardAPI {
   canUndo: boolean;
   canRedo: boolean;
   undoCount: number;
+  totalTileCount: number;
 
   // Future-proofing: Placeholder for essential game logic functions.
   /**
