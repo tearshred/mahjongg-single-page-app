@@ -10,6 +10,7 @@ import {
 import { assignRandomTiles } from "../utils/tileRandomizer"; // ✅ added
 import { isExactTile } from "../utils/tileUtils";
 import { areTilesMatch, computeFreeTileKeys } from "../gameplay-features/game-logic/tile-rules";
+import { useHistory } from "../gameplay-features/move-history/useHistory";
 
 const MATCHED_TILE_DISPLAY_MS = 320;
 
@@ -101,6 +102,8 @@ export function useMahjonggBoard(): MahjonggBoardAPI {
   );
   const matchedRemovalTimeoutRef = useRef<number | null>(null);
 
+  const { recordMove, undo: historyUndo, redo: historyRedo, canUndo, canRedo, undoCount } = useHistory();
+
   useEffect(() => {
     return () => {
       if (matchedRemovalTimeoutRef.current !== null) {
@@ -124,6 +127,9 @@ export function useMahjonggBoard(): MahjonggBoardAPI {
   const selectTile = (clickedTile: TileDataWithState) => {
     const clickedKey = getTileKey(clickedTile);
     let shouldRemoveMatchedTiles = false;
+    // Captured outside the updater so recordMove is called exactly once
+    // (React StrictMode calls updaters twice, which would double-record if called inside).
+    let matchSnapshot: TileDataWithState[] | null = null;
 
     setBoardTiles((prev) => {
       const nextClickedTile = prev.find((tile) => getTileKey(tile) === clickedKey);
@@ -144,6 +150,7 @@ export function useMahjonggBoard(): MahjonggBoardAPI {
 
       if (areTilesMatch(selectedTile, nextClickedTile)) {
         shouldRemoveMatchedTiles = true;
+        matchSnapshot = prev;
         const matchedBoard = prev.map((tile) => {
           if (isExactTile(tile, selectedTile) || isExactTile(tile, nextClickedTile)) {
             return {
@@ -161,6 +168,9 @@ export function useMahjonggBoard(): MahjonggBoardAPI {
       return deriveBoardState(prev, clickedKey);
     });
 
+    if (matchSnapshot) {
+      recordMove(matchSnapshot);
+    }
     if (shouldRemoveMatchedTiles) {
       scheduleMatchedTileRemoval();
     }
@@ -168,6 +178,30 @@ export function useMahjonggBoard(): MahjonggBoardAPI {
 
   const deselectAllTiles = () => {
     setBoardTiles((prev) => deriveBoardState(prev, null));
+  };
+
+  const handleUndo = () => {
+    if (matchedRemovalTimeoutRef.current !== null) {
+      window.clearTimeout(matchedRemovalTimeoutRef.current);
+      matchedRemovalTimeoutRef.current = null;
+    }
+    // historyUndo reads synchronously from the ref so we can call it before setBoardTiles
+    const restored = historyUndo(boardTiles);
+    if (restored) {
+      setBoardTiles(deriveBoardState(restored, null));
+    }
+  };
+
+  const handleRedo = () => {
+    if (matchedRemovalTimeoutRef.current !== null) {
+      window.clearTimeout(matchedRemovalTimeoutRef.current);
+      matchedRemovalTimeoutRef.current = null;
+    }
+    const restored = historyRedo(boardTiles);
+    if (restored) {
+      // redo restores the pre-filter snapshot; re-apply the filter so the matched pair disappears
+      setBoardTiles(deriveBoardState(restored.filter((t) => !t.isMatched), null));
+    }
   };
 
   const selectedTile =
@@ -178,5 +212,10 @@ export function useMahjonggBoard(): MahjonggBoardAPI {
     selectTile,
     deselectAllTiles,
     selectedTile,
+    handleUndo,
+    handleRedo,
+    canUndo,
+    canRedo,
+    undoCount,
   };
 }

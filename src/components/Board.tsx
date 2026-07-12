@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import MahjongTile from "./Tile";
 import { useMahjonggBoard } from "../hooks/useMahjonggBoard";
 import { useMahjonggTileDesign } from "../hooks/useMahjonggTileDesign";
@@ -13,8 +13,8 @@ import {
   TILE_WIDTH,
 } from "../utils/tilePlacement";
 
-const Board = () => {
-  const { boardTiles, selectedTile, deselectAllTiles, selectTile } =
+const Board = ({ onNewGame }: { onNewGame: () => void }) => {
+  const { boardTiles, selectedTile, deselectAllTiles, selectTile, handleUndo, handleRedo, canUndo, canRedo, undoCount } =
     useMahjonggBoard();
   const { getTileDesign } = useMahjonggTileDesign();
   const { gridDimensions } = useLayoutConfig(); // Get dynamic dimensions
@@ -113,6 +113,35 @@ const Board = () => {
 
     return Array.from(missing).sort();
   }, [boardTiles, getTileDesign]);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "z" && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+      } else if (
+        (e.key === "y" && (e.ctrlKey || e.metaKey)) ||
+        (e.key === "z" && (e.ctrlKey || e.metaKey) && e.shiftKey)
+      ) {
+        e.preventDefault();
+        handleRedo();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [handleUndo, handleRedo]);
+
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => setElapsedSeconds((s) => s + 1), 1000);
+    return () => clearInterval(interval);
+  }, []);
+  const formattedTime = useCallback(() => {
+    const h = Math.floor(elapsedSeconds / 3600);
+    const m = Math.floor((elapsedSeconds % 3600) / 60);
+    const s = elapsedSeconds % 60;
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }, [elapsedSeconds]);
 
   const lastUnresolvedSignatureRef = useRef<string>("");
 
@@ -253,6 +282,29 @@ const Board = () => {
           </div>
           <div className="break-words text-[10px] text-green-200/80">{completionLabel}</div>
         </div>
+
+        <div className="mt-3 rounded border border-green-300/30 bg-black/40 p-2 text-xs">
+          <div className="mb-2 border-b border-green-300/20 pb-1 text-[11px] uppercase tracking-[0.16em] text-green-300/75">
+            Group 5: History
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={handleUndo}
+              disabled={!canUndo}
+              className="flex-1 rounded border border-green-300/40 px-2 py-1 text-[11px] uppercase tracking-wider transition-colors hover:bg-green-300/10 disabled:cursor-not-allowed disabled:opacity-30"
+            >
+              ↩ Undo {canUndo ? `(${undoCount}/5)` : ""}
+            </button>
+            <button
+              onClick={handleRedo}
+              disabled={!canRedo}
+              className="flex-1 rounded border border-green-300/40 px-2 py-1 text-[11px] uppercase tracking-wider transition-colors hover:bg-green-300/10 disabled:cursor-not-allowed disabled:opacity-30"
+            >
+              ↪ Redo
+            </button>
+          </div>
+          <div className="mt-1 text-[10px] text-green-200/50">Ctrl+Z / Ctrl+Y</div>
+        </div>
       </div>
 
       {/* No visible layers message */}
@@ -261,6 +313,26 @@ const Board = () => {
           No visible layers
         </div>
       )}
+
+      {/* Session timer — center bottom */}
+      <div
+        className="pointer-events-none absolute bottom-4 left-0 right-0 z-50 flex justify-center"
+      >
+        <div
+          className="rounded-lg border border-white/20 bg-black/60 px-5 py-2 text-sm font-semibold tracking-widest text-white/80 shadow-lg backdrop-blur-sm"
+          style={{ fontFamily: "Monaco, Menlo, Consolas, 'Liberation Mono', 'Courier New', monospace" }}
+        >
+          {formattedTime()}
+        </div>
+      </div>
+
+      {/* New Game button — bottom-right, opposite the debug panel */}
+      <button
+        onClick={onNewGame}
+        className="absolute bottom-4 right-4 z-50 rounded-lg border border-white/20 bg-black/60 px-5 py-2.5 text-sm font-semibold uppercase tracking-widest text-white/80 shadow-lg backdrop-blur-sm transition-colors hover:bg-white/10 hover:text-white"
+      >
+        New Game
+      </button>
 
       {/* Keep the board clear of the left debug panel */}
       <div

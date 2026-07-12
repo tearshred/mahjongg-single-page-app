@@ -33,6 +33,12 @@ export interface MahjonggBoardAPI {
    */
   selectedTile: TileDataWithState | null;
 
+  handleUndo: () => void;
+  handleRedo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
+  undoCount: number;
+
   // Future-proofing: Placeholder for essential game logic functions.
   /**
    * Checks if the currently selected tiles form a valid match.
