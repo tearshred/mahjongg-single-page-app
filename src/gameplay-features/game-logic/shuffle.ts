@@ -43,20 +43,23 @@ export function dealWinnableBoard(
   for (let pairIndex = 0; pairIndex < pairsNeeded; pairIndex++) {
     const symbol = pool[pairIndex * 2]; // Both tiles in this pair are the same
 
-    // Find first free position
+    // Find first free position (avoid stacking same symbol vertically)
     const firstIndex = findRandomFreePosition(
       positions,
       usedPositions,
-      result
+      result,
+      undefined,
+      symbol.name
     );
     if (firstIndex === -1) break; // No more free positions
 
-    // Find second free position
+    // Find second free position (also avoid stacking same symbol vertically)
     const secondIndex = findRandomFreePosition(
       positions,
       usedPositions,
       result,
-      firstIndex
+      firstIndex,
+      symbol.name
     );
     if (secondIndex === -1) break;
 
@@ -90,12 +93,14 @@ export function dealWinnableBoard(
 /**
  * Find a random free position from the available pool.
  * A position is "free" if it's not yet used AND currently playable (not blocked).
+ * Rejects positions where the same symbol already occupies the exact (col, row) in any other layer.
  */
 function findRandomFreePosition(
   positions: LayoutPosition[],
   usedPositions: Set<number>,
   result: TileDataWithState[],
-  excludeIndex?: number
+  excludeIndex?: number,
+  forbiddenSymbolName?: string
 ): number {
   const candidates: number[] = [];
 
@@ -106,6 +111,18 @@ function findRandomFreePosition(
 
     // Check if this position is currently free (not blocked by already-assigned tiles)
     if (result[i] === undefined) {
+      // Reject if placing forbiddenSymbolName would create an identical vertical stack
+      if (forbiddenSymbolName !== undefined) {
+        const { col, row } = positions[i];
+        const wouldStack = positions.some(
+          (p, j) =>
+            j !== i &&
+            p.col === col &&
+            p.row === row &&
+            result[j]?.name === forbiddenSymbolName
+        );
+        if (wouldStack) continue;
+      }
       candidates.push(i);
     }
   }

@@ -47,7 +47,7 @@ describe("Tile Loading Flow", () => {
 
   // Test 3: Full component chain
   it("Board should render tiles with correct data-testid", () => {
-    render(<Board />);
+    render(<Board onNewGame={() => {}} />);
     
     // Check for both base tiles and symbols
     const tileSymbols = screen.getAllByTestId("tile-symbol");

@@ -360,7 +360,11 @@ const Board = ({ onNewGame }: { onNewGame: () => void }) => {
 
       {/* New Game button — bottom-right, opposite the debug panel */}
       <button
-        onClick={onNewGame}
+        onClick={() => {
+          if (window.confirm("Are you sure you want to start a new game? Current progress will be lost.")) {
+            onNewGame();
+          }
+        }}
         className="absolute bottom-4 right-4 z-50 rounded-lg border border-white/20 bg-black/60 px-5 py-2.5 text-sm font-semibold uppercase tracking-widest text-white/80 shadow-lg backdrop-blur-sm transition-colors hover:bg-white/10 hover:text-white"
       >
         New Game
