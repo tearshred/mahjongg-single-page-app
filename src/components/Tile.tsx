@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { TILE_HEIGHT, TILE_LAYER_OFFSET_X, TILE_LAYER_OFFSET_Y, TILE_WIDTH } from "../utils/tilePlacement";
+import "../styles/tile.css";
 
 interface MahjongTileProps {
   layer: number;
@@ -13,9 +14,6 @@ interface MahjongTileProps {
   children?: ReactNode;
 }
 
-const SVG_WIDTH = 74;
-const SVG_HEIGHT = 98;
-
 export const MahjongTile = ({
   layer,
   row,
@@ -28,47 +26,23 @@ export const MahjongTile = ({
   children,
 }: MahjongTileProps) => {
   const zIndex = layer * 1000 + column * 100 + row * 10;
-  const top = row * TILE_HEIGHT - layer * TILE_LAYER_OFFSET_Y + offsetY * TILE_HEIGHT;
-  const left = column * TILE_WIDTH - layer * TILE_LAYER_OFFSET_X + offsetX * TILE_WIDTH;
+  const top    = row    * TILE_HEIGHT - layer * TILE_LAYER_OFFSET_Y + offsetY * TILE_HEIGHT;
+  const left   = column * TILE_WIDTH  - layer * TILE_LAYER_OFFSET_X + offsetX * TILE_WIDTH;
+
+  const className = [
+    "mj-tile",
+    isSelected  ? "mj-tile--selected" : "",
+    !isPlayable ? "mj-tile--blocked"  : "",
+  ].filter(Boolean).join(" ");
 
   return (
     <div
-      className="absolute transition-all duration-200"
-      style={{
-        zIndex,
-        top,
-        left,
-        width: SVG_WIDTH,
-        height: SVG_HEIGHT,
-        cursor: isPlayable ? "pointer" : "not-allowed",
-        filter: isPlayable ? "none" : "brightness(0.75)",
-      }}
-      onClick={(event) => {
-        event.stopPropagation();
-        if (isPlayable) {
-          onSelect?.();
-        }
-      }}
+      className={className}
+      style={{ top, left, zIndex }}
+      onClick={(e) => { e.stopPropagation(); onSelect?.(); }}
     >
-      <svg width="74" height="98" viewBox="0 0 74 98" className="overflow-visible">
-        <rect x="8" y="14" width="60" height="76" rx="4" fill="rgba(0,0,0,0.25)" />
-        <polygon points="68,6 74,12 74,88 68,82" fill="#0A3F20" />
-        <polygon points="8,82 14,88 74,88 68,82" fill="#0F5132" />
-        <rect
-          x="8"
-          y="6"
-          width="60"
-          height="76"
-          rx="3"
-          fill={isSelected ? "#FFFBEA" : "#F4EAD4"}
-          stroke={isSelected ? "#D97706" : "#C5B696"}
-          strokeWidth={isSelected ? "2" : "1"}
-        />
-      </svg>
-      <div
-        className="pointer-events-none absolute left-[12px] top-[10px] flex h-[68px] w-[52px] items-center justify-center select-none"
-      >
-        {children ?? <span className="text-xs text-gray-400">Empty</span>}
+      <div className="pointer-events-none flex h-[60px] w-[48px] items-center justify-center">
+        {children}
       </div>
     </div>
   );
