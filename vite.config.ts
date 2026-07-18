@@ -15,6 +15,9 @@ export default defineConfig({
     svgr(), // Importing SVGs as React components (needed for tile design)
     tailwindcss(), // TailwindCSS Support
   ],
+  preview: {
+    allowedHosts: true,
+  },
   test: {
     globals: true, // allows describe/it/expect globally
     environment: "jsdom", // Ssimulate browser DOM in Node
