@@ -100,18 +100,61 @@ const Board = ({ onNewGame }: { onNewGame: () => void }) => {
   // New Game confirmation modal
   const [isConfirmingNewGame, setIsConfirmingNewGame] = useState(false);
 
-  // Fullscreen state
+  // Fullscreen — native with vendor-prefix fallback, CSS virtual fallback
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isVirtualFullscreen, setIsVirtualFullscreen] = useState(false);
+
   useEffect(() => {
-    const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+    const onFsChange = () => {
+      const active = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement ||
+        (document as any).msFullscreenElement
+      );
+      setIsFullscreen(active);
+      if (!active) setIsVirtualFullscreen(false);
+    };
     document.addEventListener("fullscreenchange", onFsChange);
-    return () => document.removeEventListener("fullscreenchange", onFsChange);
+    document.addEventListener("webkitfullscreenchange", onFsChange);
+    document.addEventListener("mozfullscreenchange", onFsChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onFsChange);
+      document.removeEventListener("webkitfullscreenchange", onFsChange);
+      document.removeEventListener("mozfullscreenchange", onFsChange);
+    };
   }, []);
+
   const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch((err) => console.error(err));
+    const inFullscreen = isFullscreen || isVirtualFullscreen;
+
+    if (inFullscreen) {
+      const exitFS =
+        document.exitFullscreen ||
+        (document as any).webkitExitFullscreen ||
+        (document as any).mozCancelFullScreen ||
+        (document as any).msExitFullscreen;
+      if (exitFS && document.fullscreenElement) exitFS.call(document).catch(() => {});
+      setIsVirtualFullscreen(false);
+      setIsFullscreen(false);
+      return;
+    }
+
+    const el = document.documentElement;
+    const requestFS =
+      el.requestFullscreen ||
+      (el as any).webkitRequestFullscreen ||
+      (el as any).mozRequestFullScreen ||
+      (el as any).msRequestFullscreen;
+
+    if (requestFS) {
+      requestFS.call(el).catch(() => {
+        setIsVirtualFullscreen(true);
+        setIsFullscreen(true);
+      });
     } else {
-      document.exitFullscreen();
+      setIsVirtualFullscreen(true);
+      setIsFullscreen(true);
     }
   };
 
@@ -203,7 +246,7 @@ const Board = ({ onNewGame }: { onNewGame: () => void }) => {
   return (
     <div
       id="main-board"
-      className="relative h-screen w-screen overflow-hidden"
+      className={`relative h-screen w-screen overflow-hidden${isVirtualFullscreen ? " mj-virtual-fullscreen" : ""}`}
       style={{
         background:
           "radial-gradient(circle at 50% 35%, #8a2034 0%, #6f1728 36%, #55111f 72%, #3b0a15 100%)",
