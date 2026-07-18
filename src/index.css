@@ -64,6 +64,16 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+/* Virtual fullscreen fallback for browsers that block the native Fullscreen API */
+.mj-virtual-fullscreen {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 99999 !important;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
