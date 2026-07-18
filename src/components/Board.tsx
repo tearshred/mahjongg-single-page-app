@@ -147,7 +147,10 @@ const Board = ({ onNewGame }: { onNewGame: () => void }) => {
       (el as any).mozRequestFullScreen ||
       (el as any).msRequestFullscreen;
 
-    if (requestFS) {
+    const nativeFullscreenEnabled =
+      document.fullscreenEnabled || (document as any).webkitFullscreenEnabled;
+
+    if (requestFS && nativeFullscreenEnabled) {
       requestFS.call(el).catch(() => {
         setIsVirtualFullscreen(true);
         setIsFullscreen(true);
@@ -200,9 +203,14 @@ const Board = ({ onNewGame }: { onNewGame: () => void }) => {
   }, [handleUndo, handleRedo]);
 
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [timerStarted, setTimerStarted] = useState(false);
+  useEffect(() => {
+    if (matchedTileCount > 0 && !timerStarted) setTimerStarted(true);
+  }, [matchedTileCount, timerStarted]);
+
   // Ref keeps the interval callback up-to-date without changing dep array size
   const isClearRef = useRef(false);
-  isClearRef.current = isClear || isDeadlock || debugFreezeTimer || isConfirmingNewGame;
+  isClearRef.current = !timerStarted || isClear || isDeadlock || debugFreezeTimer || isConfirmingNewGame;
   useEffect(() => {
     const interval = setInterval(() => {
       if (!isClearRef.current) setElapsedSeconds((s) => s + 1);
@@ -494,15 +502,19 @@ const Board = ({ onNewGame }: { onNewGame: () => void }) => {
         </div>
       )}
 
-      {/* Session timer — center bottom */}
+      {/* Stats bar — center bottom */}
       <div
         className="pointer-events-none absolute bottom-4 left-0 right-0 z-50 flex justify-center"
       >
         <div
-          className="rounded-lg border border-white/20 bg-black/60 px-5 py-2 text-sm font-semibold tracking-widest text-white/80 shadow-lg backdrop-blur-sm"
+          className="flex items-center gap-0 rounded-lg border border-white/20 bg-black/60 px-5 py-2 text-sm font-semibold tracking-widest text-white/80 shadow-lg backdrop-blur-sm"
           style={{ fontFamily: "Monaco, Menlo, Consolas, 'Liberation Mono', 'Courier New', monospace" }}
         >
-          {formattedTime()}
+          <span>{formattedTime()}</span>
+          <span className="mx-3 text-white/30">|</span>
+          <span>{availableMoves} {availableMoves === 1 ? "MOVE" : "MOVES"}</span>
+          <span className="mx-3 text-white/30">|</span>
+          <span>{activeTileCount} TILES</span>
         </div>
       </div>
 
