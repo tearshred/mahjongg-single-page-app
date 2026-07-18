@@ -93,5 +93,5 @@ export function areTilesMatch(
         return false;
     }
 
-    return normalizeTileName(firstTile.name) === normalizeTileName(secondTile.name);
+    return firstTile.name === secondTile.name;
 }

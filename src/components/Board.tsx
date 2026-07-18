@@ -36,7 +36,7 @@ const Board = ({ onNewGame }: { onNewGame: () => void }) => {
   const boardHeight = boardPaddingTop + (maxRow - 1) * TILE_VERTICAL_STEP + TILE_HEIGHT + 32;
 
   // Debug panel visibility
-  const [isDebugVisible, setIsDebugVisible] = useState(true);
+  const [isDebugVisible, setIsDebugVisible] = useState(false);
 
   // Layer visibility state for debugging
   const [visibleLayers, setVisibleLayers] = useState<boolean[]>(() =>
@@ -97,8 +97,13 @@ const Board = ({ onNewGame }: { onNewGame: () => void }) => {
     return Math.round((matchedTileCount / totalTileCount) * 100);
   }, [totalTileCount, matchedTileCount]);
 
-  const isDeadlock = availableTileCount > 0 && availableMoves === 0;
-  const isClear = activeTileCount === 0;
+  // Debug overrides for testing UI states
+  const [debugForceClear, setDebugForceClear] = useState(false);
+  const [debugForceDeadlock, setDebugForceDeadlock] = useState(false);
+  const [debugFreezeTimer, setDebugFreezeTimer] = useState(false);
+
+  const isClear = debugForceClear || activeTileCount === 0;
+  const isDeadlock = !isClear && (debugForceDeadlock || (availableTileCount > 0 && availableMoves === 0));
   const solvabilityLabel = isClear ? "CLEAR" : isDeadlock ? "DEADLOCK" : "PLAYABLE";
   const completionLabel = isClear
     ? "COMPLETE"
@@ -134,8 +139,13 @@ const Board = ({ onNewGame }: { onNewGame: () => void }) => {
   }, [handleUndo, handleRedo]);
 
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  // Ref keeps the interval callback up-to-date without changing dep array size
+  const isClearRef = useRef(false);
+  isClearRef.current = isClear || isDeadlock || debugFreezeTimer;
   useEffect(() => {
-    const interval = setInterval(() => setElapsedSeconds((s) => s + 1), 1000);
+    const interval = setInterval(() => {
+      if (!isClearRef.current) setElapsedSeconds((s) => s + 1);
+    }, 1000);
     return () => clearInterval(interval);
   }, []);
   const formattedTime = useCallback(() => {
@@ -335,12 +345,89 @@ const Board = ({ onNewGame }: { onNewGame: () => void }) => {
               </div>
               <div className="mt-1 text-[10px] text-green-200/50">Ctrl+Z / Ctrl+Y</div>
             </div>
+
+            {/* Group 6: Testing */}
+            <div className="rounded border border-amber-400/40 bg-black/40 p-2 text-xs">
+              <div className="mb-2 border-b border-amber-400/20 pb-1 text-[11px] uppercase tracking-[0.16em] text-amber-400/80">
+                Group 6: Testing
+              </div>
+
+              {/* Win state */}
+              <div className="mb-2">
+                <button
+                  onClick={() => { setDebugForceClear(v => !v); setDebugForceDeadlock(false); }}
+                  className={`w-full min-h-[36px] rounded border px-2 py-1.5 text-[11px] uppercase tracking-wider transition-colors ${
+                    debugForceClear
+                      ? "border-amber-400/80 bg-amber-400/20 text-amber-300"
+                      : "border-green-300/30 hover:bg-green-300/10 active:bg-green-300/20"
+                  }`}
+                >
+                  {debugForceClear ? "✓ Win Active" : "Toggle Win"}
+                </button>
+              </div>
+
+              {/* Timer */}
+              <div className="mb-2">
+                <div className="mb-1 text-[10px] uppercase tracking-widest text-green-300/40">Timer</div>
+                <button
+                  onClick={() => setDebugFreezeTimer(v => !v)}
+                  className={`w-full min-h-[36px] rounded border px-2 py-1.5 text-[11px] uppercase tracking-wider transition-colors ${
+                    debugFreezeTimer
+                      ? "border-sky-400/80 bg-sky-400/20 text-sky-300"
+                      : "border-green-300/30 hover:bg-green-300/10 active:bg-green-300/20"
+                  }`}
+                >
+                  {debugFreezeTimer ? "✓ Timer Frozen" : "Freeze Timer"}
+                </button>
+              </div>
+
+              {/* Lose state */}
+              <div className="mb-2">
+                <button
+                  onClick={() => { setDebugForceDeadlock(v => !v); setDebugForceClear(false); }}
+                  className={`w-full min-h-[36px] rounded border px-2 py-1.5 text-[11px] uppercase tracking-wider transition-colors ${
+                    debugForceDeadlock
+                      ? "border-rose-500/80 bg-rose-500/20 text-rose-400"
+                      : "border-green-300/30 hover:bg-green-300/10 active:bg-green-300/20"
+                  }`}
+                >
+                  {debugForceDeadlock ? "✓ Loss Active" : "Toggle Loss"}
+                </button>
+              </div>
+
+              {/* Reset all */}
+              <button
+                onClick={() => { setDebugForceClear(false); setDebugForceDeadlock(false); setDebugFreezeTimer(false); }}
+                disabled={!debugForceClear && !debugForceDeadlock && !debugFreezeTimer}
+                className="w-full min-h-[36px] rounded border border-green-300/20 px-2 py-1.5 text-[11px] uppercase tracking-wider text-green-300/50 transition-colors hover:bg-green-300/10 hover:text-green-300 active:bg-green-300/20 disabled:cursor-not-allowed disabled:opacity-30"
+              >
+                Reset All Overrides
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* No visible layers message */}
-      {visibleTiles.length === 0 && (
+      {/* Game Won banner */}
+      {isClear && (
+        <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center">
+          <span className="text-5xl font-black tracking-widest text-amber-300 drop-shadow-[0_2px_16px_rgba(251,191,36,0.7)]">
+            CONGRATULATIONS
+          </span>
+        </div>
+      )}
+
+      {/* Game Over overlay */}
+      {isDeadlock && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <span className="text-7xl font-black tracking-widest text-red-500 drop-shadow-[0_2px_24px_rgba(239,68,68,0.8)]">
+            GAME OVER
+          </span>
+        </div>
+      )}
+
+      {/* No visible layers message (non-game states only) */}
+      {visibleTiles.length === 0 && !isClear && (
         <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center text-4xl">
           No visible layers
         </div>
@@ -358,6 +445,26 @@ const Board = ({ onNewGame }: { onNewGame: () => void }) => {
         </div>
       </div>
 
+      {/* Undo / Redo — top-right */}
+      <div className="absolute top-4 right-4 z-[60] flex gap-2">
+        <button
+          onClick={handleUndo}
+          disabled={!canUndo}
+          className="rounded-lg border border-white/20 bg-black/60 px-4 py-2 text-sm font-semibold tracking-widest text-white/80 shadow-lg backdrop-blur-sm transition-colors hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+          title="Undo (Ctrl+Z)"
+        >
+          ↩
+        </button>
+        <button
+          onClick={handleRedo}
+          disabled={!canRedo}
+          className="rounded-lg border border-white/20 bg-black/60 px-4 py-2 text-sm font-semibold tracking-widest text-white/80 shadow-lg backdrop-blur-sm transition-colors hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+          title="Redo (Ctrl+Y)"
+        >
+          ↪
+        </button>
+      </div>
+
       {/* New Game button — bottom-right, opposite the debug panel */}
       <button
         onClick={() => {
@@ -365,7 +472,7 @@ const Board = ({ onNewGame }: { onNewGame: () => void }) => {
             onNewGame();
           }
         }}
-        className="absolute bottom-4 right-4 z-50 rounded-lg border border-white/20 bg-black/60 px-5 py-2.5 text-sm font-semibold uppercase tracking-widest text-white/80 shadow-lg backdrop-blur-sm transition-colors hover:bg-white/10 hover:text-white"
+        className="absolute bottom-4 right-4 z-[60] rounded-lg border border-white/20 bg-black/60 px-5 py-2.5 text-sm font-semibold uppercase tracking-widest text-white/80 shadow-lg backdrop-blur-sm transition-colors hover:bg-white/10 hover:text-white"
       >
         New Game
       </button>
