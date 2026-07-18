@@ -5,15 +5,19 @@
   font-weight: bold;
   box-sizing: border-box;
   width: 60px;
-  height: 76px;
+  height: 80px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #f8f8f8;
-  border-radius: 2px;
+  border-radius: 4px;
   border: 1px solid #999;
   position: absolute;
-  box-shadow: 4px 4px 0px 0px #999, 8px 8px 0px 0px #963;
+  box-shadow:
+    inset 2px 2px 2px rgba(255,255,255,0.8),
+    inset -2px -2px 2px rgba(0,0,0,0.05),
+    3px 3px 0px #1b7343,
+    5px 5px 6px rgba(0,0,0,0.3);
   cursor: pointer;
   user-select: none;
   pointer-events: auto;
@@ -22,39 +26,16 @@
   transition: transform 80ms ease-out, box-shadow 80ms ease-out;
 }
 
-/* Corner pip decorations */
-.mj-tile::after,
-.mj-tile::before {
-  position: absolute;
-  content: '';
-  width: 8px;
-  height: 8px;
-  background: #963;
-  z-index: -1;
-}
-.mj-tile::after {
-  top: -1px;
-  right: 0;
-  transform-origin: top right;
-  transform: scale(1.4) rotate(-45deg);
-}
-.mj-tile::before {
-  bottom: 0;
-  left: -1px;
-  transform-origin: bottom left;
-  transform: scale(1.4) rotate(45deg);
-}
-
 /* Selected state — amber outline and tint */
 .mj-tile--selected {
   border-color: #F59E0B;
-  box-shadow: 4px 4px 0px 0px #92400E, 8px 8px 0px 0px #92400E;
   background: #FFFBEA;
   transform: translateY(-1px);
-}
-.mj-tile--selected::after,
-.mj-tile--selected::before {
-  background: #92400E;
+  box-shadow:
+    inset 2px 2px 2px rgba(255,255,255,0.9),
+    inset -2px -2px 2px rgba(0,0,0,0.05),
+    3px 3px 0px #92400E,
+    5px 5px 6px rgba(0,0,0,0.35);
 }
 
 /* Blocked / not playable — dimmed, no interaction */
@@ -67,11 +48,19 @@
 /* Hover — playable only */
 .mj-tile:not(.mj-tile--blocked):not(.mj-tile--selected):hover {
   transform: translateY(-2px);
-  box-shadow: 6px 10px 0px 0px #999, 10px 14px 0px 0px #963;
+  box-shadow:
+    inset 2px 2px 2px rgba(255,255,255,0.8),
+    inset -2px -2px 2px rgba(0,0,0,0.05),
+    4px 5px 0px #1b7343,
+    7px 8px 8px rgba(0,0,0,0.35);
 }
 
 /* Press — playable only */
 .mj-tile:not(.mj-tile--blocked):active {
   transform: translateY(2px);
-  box-shadow: 2px 2px 0px 0px #999, 4px 4px 0px 0px #963;
+  box-shadow:
+    inset 2px 2px 2px rgba(255,255,255,0.8),
+    inset -2px -2px 2px rgba(0,0,0,0.05),
+    1px 1px 0px #1b7343,
+    2px 2px 4px rgba(0,0,0,0.25);
 }

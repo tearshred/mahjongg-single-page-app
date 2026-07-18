@@ -41,7 +41,7 @@ export const MahjongTile = ({
       style={{ top, left, zIndex }}
       onClick={(e) => { e.stopPropagation(); onSelect?.(); }}
     >
-      <div className="pointer-events-none flex h-[60px] w-[48px] items-center justify-center">
+      <div className="pointer-events-none flex h-full w-full items-center justify-center p-[6px]">
         {children}
       </div>
     </div>
