@@ -97,6 +97,24 @@ const Board = ({ onNewGame }: { onNewGame: () => void }) => {
     return Math.round((matchedTileCount / totalTileCount) * 100);
   }, [totalTileCount, matchedTileCount]);
 
+  // New Game confirmation modal
+  const [isConfirmingNewGame, setIsConfirmingNewGame] = useState(false);
+
+  // Fullscreen state
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  useEffect(() => {
+    const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch((err) => console.error(err));
+    } else {
+      document.exitFullscreen();
+    }
+  };
+
   // Debug overrides for testing UI states
   const [debugForceClear, setDebugForceClear] = useState(false);
   const [debugForceDeadlock, setDebugForceDeadlock] = useState(false);
@@ -141,7 +159,7 @@ const Board = ({ onNewGame }: { onNewGame: () => void }) => {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   // Ref keeps the interval callback up-to-date without changing dep array size
   const isClearRef = useRef(false);
-  isClearRef.current = isClear || isDeadlock || debugFreezeTimer;
+  isClearRef.current = isClear || isDeadlock || debugFreezeTimer || isConfirmingNewGame;
   useEffect(() => {
     const interval = setInterval(() => {
       if (!isClearRef.current) setElapsedSeconds((s) => s + 1);
@@ -465,17 +483,57 @@ const Board = ({ onNewGame }: { onNewGame: () => void }) => {
         </button>
       </div>
 
-      {/* New Game button — bottom-right, opposite the debug panel */}
-      <button
-        onClick={() => {
-          if (window.confirm("Are you sure you want to start a new game? Current progress will be lost.")) {
-            onNewGame();
-          }
-        }}
-        className="absolute bottom-4 right-4 z-[60] rounded-lg border border-white/20 bg-black/60 px-5 py-2.5 text-sm font-semibold uppercase tracking-widest text-white/80 shadow-lg backdrop-blur-sm transition-colors hover:bg-white/10 hover:text-white"
-      >
-        New Game
-      </button>
+      {/* Fullscreen + New Game — bottom-right */}
+      <div className="absolute bottom-4 right-4 z-[60] flex gap-2">
+        <button
+          onClick={toggleFullscreen}
+          className="rounded-lg border border-white/20 bg-black/60 px-4 py-2.5 text-sm font-semibold uppercase tracking-widest text-white/80 shadow-lg backdrop-blur-sm transition-colors hover:bg-white/10 hover:text-white"
+          title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+        >
+          {isFullscreen ? "⛶" : "⛶"}
+          <span className="ml-1.5">{isFullscreen ? "Exit" : "Fullscreen"}</span>
+        </button>
+        <button
+          onClick={() => setIsConfirmingNewGame(true)}
+          className="rounded-lg border border-white/20 bg-black/60 px-5 py-2.5 text-sm font-semibold uppercase tracking-widest text-white/80 shadow-lg backdrop-blur-sm transition-colors hover:bg-white/10 hover:text-white"
+        >
+          New Game
+        </button>
+      </div>
+
+      {/* New Game confirmation modal */}
+      {isConfirmingNewGame && (
+        <div className="absolute inset-0 z-[70] flex items-center justify-center">
+          {/* Blurred backdrop */}
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsConfirmingNewGame(false)} />
+          {/* Modal card */}
+          <div className="relative z-10 flex flex-col items-center gap-6 rounded-2xl border border-white/20 bg-black/90 px-10 py-8 shadow-2xl">
+            <p className="text-center text-lg font-semibold tracking-wide text-white/90">
+              Start a new game?
+            </p>
+            <p className="text-center text-sm text-white/50">
+              Current progress will be lost.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setIsConfirmingNewGame(false);
+                  onNewGame();
+                }}
+                className="rounded-lg border border-rose-400/60 bg-rose-500/20 px-6 py-2.5 text-sm font-semibold uppercase tracking-widest text-rose-300 transition-colors hover:bg-rose-500/35 hover:text-rose-200"
+              >
+                Yes, Restart
+              </button>
+              <button
+                onClick={() => setIsConfirmingNewGame(false)}
+                className="rounded-lg border border-white/20 bg-white/10 px-6 py-2.5 text-sm font-semibold uppercase tracking-widest text-white/80 transition-colors hover:bg-white/20 hover:text-white"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Keep the board clear of the left debug panel */}
       <div

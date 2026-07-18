@@ -1,7 +1,7 @@
 import type { GridPosition } from "../types/BoardLayouts";
 
 export const TILE_WIDTH = 60;
-export const TILE_HEIGHT = 76;
+export const TILE_HEIGHT = 80;
 export const TILE_HORIZONTAL_STEP = TILE_WIDTH;
 export const TILE_VERTICAL_STEP = TILE_HEIGHT;
 export const TILE_LAYER_OFFSET_X = 4;
